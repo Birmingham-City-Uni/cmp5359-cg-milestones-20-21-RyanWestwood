@@ -1,10 +1,32 @@
 ﻿  main.cpp
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(43,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(46,17): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(110,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(114,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(135,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(136,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(137,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(138,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(41,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(44,17): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(62,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(66,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(97,20): warning C4244: 'initializing': conversion from 't' to 'float', possible loss of data
+          with
+          [
+              t=int
+          ]
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(175,71): warning C4244: 'argument': conversion from 't' to 't', possible loss of data
+          with
+          [
+              t=float
+          ]
+          and
+          [
+              t=int
+          ]
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(175,47): warning C4244: 'argument': conversion from 't' to 't', possible loss of data
+          with
+          [
+              t=float
+          ]
+          and
+          [
+              t=int
+          ]
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(182,127): warning C4244: 'argument': conversion from 'float' to 'unsigned char', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(182,110): warning C4244: 'argument': conversion from 'float' to 'unsigned char', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(182,93): warning C4244: 'argument': conversion from 'float' to 'unsigned char', possible loss of data
   Rasterisation.vcxproj -> C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\bin\x64\Debug\Rasterisation.exe

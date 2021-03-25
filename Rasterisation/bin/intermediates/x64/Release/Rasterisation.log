@@ -1,0 +1,16 @@
+﻿  main.cpp
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(43,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(46,17): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(64,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(68,12): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(93,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(94,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(95,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(96,11): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  model.cpp
+  tgaimage.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 356 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Rasterisation.vcxproj -> C:\Users\RyanW\Documents\Work\GitHub\Year-2\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\bin\x64\Release\Rasterisation.exe

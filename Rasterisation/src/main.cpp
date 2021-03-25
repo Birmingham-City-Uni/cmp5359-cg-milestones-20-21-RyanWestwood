@@ -8,19 +8,17 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <iterator>
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
-Model* model = NULL;
-const int width = 800;
-const int height = 800;
+const TGAColor green = TGAColor(0, 255, 0, 255);
+Model* model = nullptr;
+const int width = 1080;
+const int height = 1080;
 
-struct Point
-{
-	int x, y;
-};
-
-void Line(Point a, Point b, TGAImage& image, TGAColor color) {
+void Line(Vec2i a, Vec2i b, TGAImage& image, TGAColor color) {
 
 	bool steep = false;
 	if (abs(a.x - b.x) < abs(a.y - b.y)) {
@@ -48,52 +46,6 @@ void Line(Point a, Point b, TGAImage& image, TGAColor color) {
 	}
 }
 
-//void Line(double x0, double y0, double x1, double y1, TGAImage& image, TGAColor color) {
-//	double deltaX = x1 - x0;
-//	double deltaY = y1 - y0;
-//
-//	double deltaErr = abs(deltaY / deltaX);
-//
-//	double error = 0.0;
-//
-//	int y = y0;
-//	for (int x = x0; x < x1; x++)
-//	{
-//		image.set(x, y, color);
-//		error += deltaErr;
-//		if (error >= 0.5) {
-//			y += sin(deltaY);
-//			error -= 1.0;
-//		}
-//	}
-//}
-
-//void Line(double x0, double y0, double x1, double y1, TGAImage& image, TGAColor color) {
-//
-//	double dx = x1 - x0;
-//	double dy = y1 - y0;
-//	double yi = 1;
-//
-//	if (dy < 0) {
-//		yi = -1;
-//		dy = -dy;
-//	}
-//	double D = (2 * dy) - dx;
-//	double y = y0;
-//
-//	for (int x = x0; x < x1; x++)
-//	{
-//		image.set(x, y, color);
-//		if (D > 0) {
-//			y = y + yi;
-//			D = D + (2 * (dy - dx));
-//		}
-//		else {
-//			D = D + 2 * dy;
-//		}
-//	}
-//}
-
 void Line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color) {
 	double dx = abs(x1 - x0);
 	double sx = x0 < x1 ? 1 : -1;
@@ -116,35 +68,124 @@ void Line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color) {
 	}
 }
 
+void Find() {
+
+}
+
+std::pair<Vec2i, Vec2i> TriangleBoundingBox(std::vector<Vec2i> points, TGAImage& image) {
+
+	auto minXIter = std::min_element(begin(points), end(points), [](auto& a, auto& b)-> bool { return a.x < b.x; });
+	int minX = Vec2i(*minXIter).x;
+	auto minYIter = std::min_element(begin(points), end(points), [](auto& a, auto& b)-> bool { return a.y < b.y; });
+	int minY = Vec2i(*minYIter).y;
+
+	auto maxXIter = std::max_element(begin(points), end(points), [](auto& a, auto& b)-> bool { return a.x < b.x; });
+	int maxX = Vec2i(*maxXIter).x;
+	auto maxYIter = std::max_element(begin(points), end(points), [](auto& a, auto& b)-> bool { return a.y < b.y; });
+	int maxY = Vec2i(*maxYIter).y;
+
+	//Line(minX, minY, maxX, minY, image, red);
+	//Line(maxX, maxY, minX, maxY, image, red);
+	//Line(minX, minY, minX, maxY, image, red);
+	//Line(maxX, minY, maxX, maxY, image, red);
+
+	return { {minX, minY}, {maxX, maxY} };
+}
+
+bool InTriangle(Vec2i a, Vec2i b, Vec2i c, Vec2i p) {
+
+	float denominator = ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y));
+	float aa = ((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / denominator;
+	float bb = ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / denominator;
+	float cc = 1 - aa - bb;
+
+	return 0 <= aa && aa <= 1 && 0 <= bb && bb <= 1 && 0 <= cc && cc <= 1;
+}
+
+void Triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage& image, TGAColor color) {
+
+	std::pair<Vec2i, Vec2i> bbox = TriangleBoundingBox({ t0, t1, t2 }, image);
+
+	for (int x = bbox.first.x; x < bbox.second.x; x++)
+	{
+		for (int y = bbox.first.y; y < bbox.second.y; y++)
+		{
+			if (InTriangle(t0, t1, t2, { x,y })) {
+				image.set(x, y, color);
+			}
+		}
+	}
+
+	//if (t0.y == t1.y && t0.y == t2.y) return;
+
+	//if (t0.y > t1.y) std::swap(t0, t1);
+	//if (t0.y > t2.y) std::swap(t0, t2);
+	//if (t1.y > t2.y) std::swap(t1, t2);
+
+	//float totalHeight = t2.y - t0.y;
+
+	//for (int i = t0.y; i < t1.y; i++)
+	//{
+	//	float segment_height = t1.y - t0.y + 1;
+	//	float alpha = (i - t0.y) / totalHeight;
+	//	float beta = (i - t0.y) / segment_height;
+	//	Vec2i A = t0 + (t2 - t0) * alpha;
+	//	Vec2i B = t0 + (t1 - t0) * beta;
+
+	//	if (A.x > B.x) std::swap(A, B);
+	//	for (int j = A.x; j < B.x; j++)
+	//	{
+	//		image.set(j, i, color);
+	//	}
+	//}
+
+	//for (int i = t1.y; i < t2.y; i++)
+	//{
+	//	float segment_height = t2.y - t1.y + 1;
+	//	float alpha = (i - t0.y) / totalHeight;
+	//	float beta = (i - t1.y) / segment_height;
+	//	Vec2i A = t0 + (t2 - t0) * alpha;
+	//	Vec2i B = t1 + (t2 - t1) * beta;
+
+	//	if (A.x > B.x) std::swap(A, B);
+	//	for (int j = A.x; j < B.x; j++)
+	//	{
+	//		image.set(j, i, color);
+	//	}
+	//}
+}
+
 int main(int argc, char** argv) {
 
 	if (2 == argc) {
 		model = new Model(argv[1]);
 	}
 	else {
-		model = new Model("./res/cc.obj");
+		model = new Model("cc.obj");
 	}
 
 	TGAImage image(width, height, TGAImage::RGB);
+	Vec3f light_dir(0, 0, -1);
 	for (int i = 0; i < model->nfaces(); i++) {
 		std::vector<int> face = model->face(i);
+		Vec2i screen_coords[3];
+		Vec3f world_coords[3];
 		for (int j = 0; j < 3; j++) {
-			Vec3f v0 = model->vert(face[j]);
-			Vec3f v1 = model->vert(face[(j + 1) % 3]);
-
-			int x0 = (v0.x + 1.) * width / 2;
-			int y0 = (v0.y + 1.) * height / 2;
-			int x1 = (v1.x + 1.) * width / 2;
-			int y1 = (v1.y + 1.) * height / 2;
-
-			Line(x0, y0, x1, y1, image, white);
+			Vec3f v = model->vert(face[j]);
+			screen_coords[j] = Vec2i((v.x + 1) * width / 2, (v.y + 1) * height / 2);
+			world_coords[j] = v;
+		}
+		Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+		n.normalize();
+		float intensity = n * light_dir;
+		if (intensity > 0) {
+			Triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
 		}
 	}
 	image.flip_vertically();
-	image.write_tga_file("./res/output.tga");
+	image.write_tga_file("output1.tga");
 
 	delete model;
 
 	return 0;
 }
-

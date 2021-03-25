@@ -152,7 +152,6 @@
     <ClCompile Include="src\tgaimage.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\fileReader.h" />
     <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\model.h" />
     <ClInclude Include="src\tgaimage.h" />
