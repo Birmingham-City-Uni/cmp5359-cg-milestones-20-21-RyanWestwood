@@ -156,15 +156,6 @@ bool TGAImage::write_tga_file(const char* filename, bool rle) {
 	out.open(filename, std::ios::binary);
 	if (!out.is_open()) {
 		std::cerr << "can't open file " << filename << "\n";
-
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-		char error[512];
-		strerror_s(error, errno);
-		std::cerr << error << "\n";
-
-
 		out.close();
 		return false;
 	}
