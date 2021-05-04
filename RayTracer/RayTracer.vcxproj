@@ -25,12 +25,16 @@
     <ClInclude Include="src\hittable.h" />
     <ClInclude Include="src\hittable_list.h" />
     <ClInclude Include="src\material.h" />
+    <ClInclude Include="src\model.h" />
     <ClInclude Include="src\ray.h" />
     <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\threadpool.h" />
+    <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\raytracer.cpp" />
+    <ClCompile Include="src\Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

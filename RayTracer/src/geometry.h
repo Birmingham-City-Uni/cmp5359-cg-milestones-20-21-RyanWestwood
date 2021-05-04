@@ -146,6 +146,14 @@ public:
 		}
 	}
 
+	Vec3 Random_In_Unit_Disk() {
+		while (true) {
+			auto p = Vec3(Random_Double(-1, 1), Random_Double(-1, 1), 0);
+			if (p.norm() >= 1) continue;
+			return p;
+		}
+	}
+
 	bool Near_Zero() const {
 		const auto s = 1e-8;
 		return (x < s) && (y < s) && (z < s);
@@ -183,7 +191,11 @@ public:
 		return s << '[' << v.x << ' ' << v.y << ' ' << v.z << ']';
 	}
 
-	T x, y, z;
+	union {
+		struct { T x, y, z; };
+		struct { T ivert, iuv, inorm; };
+		T raw[3];
+	};
 };
 
 // Now you can specialize the class. We are just showing two examples here. In your code
