@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\aabb.h" />
+    <ClInclude Include="src\bvh.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\geometry.h" />
@@ -32,6 +34,7 @@
     <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\aabb.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\raytracer.cpp" />
     <ClCompile Include="src\Triangle.cpp" />

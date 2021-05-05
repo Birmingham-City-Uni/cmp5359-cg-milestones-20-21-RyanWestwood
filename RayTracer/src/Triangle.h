@@ -16,11 +16,10 @@ public:
 		: v0(vert0), v1(vert1), v2(vert2), normal(vn), mat_ptr(mat) {};
 
 	virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const override;
-
+	virtual bool Bounding_Box(AABB& output_box) const override;
 
 public:
 	Point3f v0, v1, v2;
 	Vec3f normal;
 	std::shared_ptr<Material> mat_ptr;
-
 };

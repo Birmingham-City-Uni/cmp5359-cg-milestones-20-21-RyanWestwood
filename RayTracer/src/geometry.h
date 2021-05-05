@@ -194,6 +194,7 @@ public:
 	union {
 		struct { T x, y, z; };
 		struct { T ivert, iuv, inorm; };
+		struct { T r, g, b; };
 		T raw[3];
 	};
 };

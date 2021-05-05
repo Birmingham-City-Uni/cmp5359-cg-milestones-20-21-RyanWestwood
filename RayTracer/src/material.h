@@ -15,9 +15,11 @@ Vec3f Refract(const Vec3f& uv, const Vec3f& n, double etai_over_etat) {
 }
 
 struct Hit_Record;
+
 class Material {
 public:
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const = 0;
+	virtual Colour Emitted() const { return Colour(0, 0, 0); }
 };
 
 class Lambertian : public Material {
@@ -85,4 +87,16 @@ private:
 		r0 = r0 * r0;
 		return r0 + (1 - r0) * pow((1 - cosine), 5);
 	}
+};
+
+class Diffuse_Light : public Material {
+public:
+	Diffuse_Light() {}
+	Diffuse_Light(Colour c) : emit(std::make_shared<Colour>(c)) {}
+
+	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const override { return false; }
+	virtual Colour Emitted() const override { return *emit; }
+
+public:
+	std::shared_ptr<Colour> emit;
 };

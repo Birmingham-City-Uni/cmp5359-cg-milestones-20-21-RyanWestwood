@@ -13,6 +13,7 @@
 #include "threadpool.h"
 #include "model.h"
 #include "Triangle.h"
+#include "bvh.h"
 
 #define M_PI 3.14159265359
 
@@ -45,34 +46,67 @@ void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
 	Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
 
 	switch (bpp) {
-	case 1:
-		*p = pixel;
-		break;
+		case 1:
+			*p = pixel;
+			break;
 
-	case 2:
-		*(Uint16*)p = pixel;
-		break;
+		case 2:
+			*(Uint16*)p = pixel;
+			break;
 
-	case 3:
-		if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-			p[0] = (pixel >> 16) & 0xff;
-			p[1] = (pixel >> 8) & 0xff;
-			p[2] = pixel & 0xff;
-		}
-		else {
-			p[0] = pixel & 0xff;
-			p[1] = (pixel >> 8) & 0xff;
-			p[2] = (pixel >> 16) & 0xff;
-		}
-		break;
+		case 3:
+			if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+				p[0] = (pixel >> 16) & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = pixel & 0xff;
+			}
+			else {
+				p[0] = pixel & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = (pixel >> 16) & 0xff;
+			}
+			break;
 
-	case 4:
-		*(Uint32*)p = pixel;
-		break;
+		case 4:
+			*(Uint32*)p = pixel;
+			break;
 	}
 }
 
-// method to ensure colours don’t go out of 8 bit range in RGB​
+// https://stackoverflow.com/questions/53033971/how-to-get-the-color-of-a-specific-pixel-from-sdl-surface
+Uint32 getpixel(SDL_Surface* surface, int x, int y)
+{
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to retrieve */
+	Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
+
+	switch (bpp)
+	{
+		case 1:
+			return *p;
+			break;
+
+		case 2:
+			return *(Uint16*)p;
+			break;
+
+		case 3:
+			if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+				return p[0] << 16 | p[1] << 8 | p[2];
+			else
+				return p[0] | p[1] << 8 | p[2] << 16;
+			break;
+
+		case 4:
+			return *(Uint32*)p;
+			break;
+
+		default:
+			return 0;
+	}
+}
+
+
 void clamp255(Vec3f& col) {
 	col.x = (col.x > 255) ? 255 : (col.x < 0) ? 0 : col.x;
 	col.y = (col.y > 255) ? 255 : (col.y < 0) ? 0 : col.y;
@@ -89,43 +123,36 @@ double Hit_Sphere(const Point3f& centre, double radius, const Ray& r) {
 	else return (-b - sqrt(discriminant)) / (2.0 * a);
 }
 
-Colour Ray_Colour(const Ray& r, const Hittable& world, int depth) {
+Colour Ray_Colour(const Ray& r, const Colour& background, const Hittable& world, int depth) {
 	Hit_Record rec;
 	if (depth <= 0) return Colour(0, 0, 0);
-	if (world.Hit(r, 0.001, infinity, rec)) {
-		Ray scattered;
-		Colour attentuation;
-		if (rec.mat_ptr->Scatter(r, rec, attentuation, scattered))
-			return attentuation * Ray_Colour(scattered, world, depth - 1);
-		return Colour(0, 0, 0);
-	}
-	Vec3f unit_direction = r.Direction().normalize();
-	auto t = 0.5 * (unit_direction.y + 1.0);
-	return (1.0 - t) * Colour(1.0, 1.0, 1.0) + t * Colour(0.5, 0.7, 1.0) * 255;
-}
+	if (!world.Hit(r, 0.001, infinity, rec)) return background;
+	
+	Ray scattered;
+	Colour attentuation;
+	Colour emitted = rec.mat_ptr->Emitted();
+	if (!rec.mat_ptr->Scatter(r, rec, attentuation, scattered)) return emitted;
 
-//	TODO: Use this if passing screen is thread unsafe.
-struct Result {
-	int x, y;
-	Uint32 colour;
-};
+	return emitted + attentuation * Ray_Colour(scattered, background, world, depth - 1);
+}
 
 void FullRender(SDL_Surface* screen, const float aspect_ratio, const int image_width, const int image_height,
 	Camera& cam, Hittable_List& world, int spp, int max_depth)
 {
-	const Colour black(0, 0, 0);
-	Colour pix_col(black);
+	Colour background(0, 0, 0);
 
-	pix_col = black;
-
+	Colour pix_col(0,0,0);
 	for (int y = screen->h - 1; y >= 0; --y) {
 		for (int x = 0; x < screen->w; ++x) {
-			pix_col = black;
+			pix_col = { 0,0,0 };
 			for (int s = 0; s < spp; s++) {
 				auto u = double(x + Random_Double()) / (image_width - 1);
 				auto v = double(y + Random_Double()) / (image_height - 1);
 				Ray ray = cam.Get_Ray(u, v);
-				pix_col = pix_col + Ray_Colour(ray, world, max_depth);
+				Vec3f unit_direction = ray.Direction().normalize();
+				auto t = 0.5 * (unit_direction.y + 1.0);
+				background = (1.0 - t) * Colour(1.0, 1.0, 1.0) + t * Colour(0.5, 0.7, 1.0) * 255;
+				pix_col = pix_col + Ray_Colour(ray, background, world, max_depth);
 			}
 			pix_col /= 255.f * spp;
 			pix_col.x = sqrt(pix_col.x);
@@ -141,22 +168,29 @@ void FullRender(SDL_Surface* screen, const float aspect_ratio, const int image_w
 void RenderPixel(SDL_Surface* screen, const float aspect_ratio, const int image_width, const int image_height,
 	Camera& cam, Hittable_List& world, int x, int y, int spp, int max_depth)
 {
-	const Colour black(0, 0, 0);
-	Colour pix_col(black);
+	//Uint32 col = getpixel(screen, x, y);
+	//Uint8 r, g, b;
+	//SDL_GetRGB(col, screen->format, &r, &g, &b);
+	//Colour pix_col(r,g,b);
 
-	pix_col = black;
+	Colour background(0, 0, 0);
+	Colour pix_col(0, 0, 0);
+
 	for (int s = 0; s < spp; s++) {
 		auto u = double(x + Random_Double()) / (image_width - 1);
 		auto v = double(y + Random_Double()) / (image_height - 1);
 		Ray ray = cam.Get_Ray(u, v);
-		pix_col = pix_col + Ray_Colour(ray, world, max_depth);
+		Vec3f unit_direction = ray.Direction().normalize();
+		auto t = 0.5 * (unit_direction.y + 1.0);
+		background = (1.0 - t) * Colour(1.0, 1.0, 1.0) + t * Colour(0.5, 0.7, 1.0) * 255;
+		pix_col = pix_col + Ray_Colour(ray, background, world, max_depth);
 	}
 	pix_col /= 255.f * spp;
-	pix_col.x = sqrt(pix_col.x);
-	pix_col.y = sqrt(pix_col.y);
-	pix_col.z = sqrt(pix_col.z);
+	pix_col.r = sqrt(pix_col.r);
+	pix_col.g = sqrt(pix_col.g);
+	pix_col.b = sqrt(pix_col.b);
 	pix_col *= 255;
-	Uint32 colour = SDL_MapRGB(screen->format, pix_col.x, pix_col.y, pix_col.z);
+	Uint32 colour = SDL_MapRGB(screen->format, pix_col.r, pix_col.g, pix_col.b);
 	putpixel(screen, x, y, colour);
 }
 
@@ -179,7 +213,7 @@ Hittable_List Random_Scene() {
 					sphere_material = std::make_shared<Lambertian>(albedo);
 					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
 				}
-				else if (choose_mat < 0.95) {
+				else if (choose_mat < 0.90) {
 					//	Metal
 					auto albedo = Colour::Random(0.5, 1);
 					auto fuzz = Random_Double(0, 0.5);
@@ -200,7 +234,10 @@ Hittable_List Random_Scene() {
 	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2));
 	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
 	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3));
-	return world;
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+	world.Add(std::make_shared<Sphere>(Point3f(0,3,0), 0.5, material4));
+
+	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
 Hittable_List Test_Scene() {
@@ -241,8 +278,7 @@ Hittable_List Test_Scene() {
 
 	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
 	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
-
-	return world;
+	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
 int main(int argc, char** argv)
@@ -253,16 +289,20 @@ int main(int argc, char** argv)
 	const float aspect_ratio = 16.0 / 9;
 	const int image_width = screen->w;
 	const int image_height = static_cast<int>(image_width / aspect_ratio);
-	const int spp = 1;
+	const int spp = 50;
 	const int max_depth = 50;
 
-	auto world = Random_Scene();
-	std::cout << "Scene Created: \n";
+	auto t_start = std::chrono::high_resolution_clock::now();
+	//auto world = Random_Scene();
+	auto world = Test_Scene();
+	auto t_end = std::chrono::high_resolution_clock::now();
+	auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+	std::cerr << "BVH-Construction:  " << passedTime << " ms\n";
 
-	Point3f lookfrom(13, 2, 3);
+	Point3f lookfrom(0, 4, 17);
 	Point3f lookat(0, 0, 0);
 	Vec3f vup(0, 1, 0);
-	auto dist_to_focus = 10.0;
+	auto dist_to_focus = 15.0;
 	auto aperature = 0.15;
 
 	Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperature, dist_to_focus);
@@ -275,18 +315,17 @@ int main(int argc, char** argv)
 
 		//=========================== START ===========================  
 
-		////=========================== Single thread =========================== 
-		//auto t_start = std::chrono::high_resolution_clock::now();
+		//=========================== Single thread =========================== 
+		//t_start = std::chrono::high_resolution_clock::now();
 
-		//FullRender(screen, world, spp, max_depth);
+		//FullRender(screen, aspect_ratio, image_width, image_height, cam, world, spp, max_depth);
 
-		//auto t_end = std::chrono::high_resolution_clock::now();
-		//auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		//std::cerr << "Single-thread render time:  " << passedTime << " ms\n";
+		//t_end = std::chrono::high_resolution_clock::now();
+		//passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+		//std::cerr << "\tSingle-thread render time:  " << passedTime << " ms\n";
 
 
 		//=========================== 100% CPU - multi-thread =========================== 
-		auto t_start = std::chrono::high_resolution_clock::now();
 		{
 			t_start = std::chrono::high_resolution_clock::now();
 			ThreadPool pool(std::thread::hardware_concurrency());
@@ -298,9 +337,9 @@ int main(int argc, char** argv)
 				}
 			}
 		}
-		auto t_end = std::chrono::high_resolution_clock::now();
-		auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		std::cerr << "\tThreadpool multi-threaded render time:  " << passedTime / 1000 << " seconds\n";
+		t_end = std::chrono::high_resolution_clock::now();
+		passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+		std::cerr << "\tThreadpool multi-threaded render time:  " << passedTime << " ms\n";
 
 		//=========================== END ===========================  
 
