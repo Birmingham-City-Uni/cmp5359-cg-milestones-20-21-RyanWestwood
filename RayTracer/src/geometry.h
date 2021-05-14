@@ -191,6 +191,14 @@ public:
 		return s << '[' << v.x << ' ' << v.y << ' ' << v.z << ']';
 	}
 
+	bool operator==(const Vec3<T>& rhs) const {
+		return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
+	}
+
+	bool operator!=(const Vec3<T>& rhs) const {
+		return (x != rhs.x) && (y != rhs.y) && (z != rhs.z);
+	}
+
 	union {
 		struct { T x, y, z; };
 		struct { T ivert, iuv, inorm; };

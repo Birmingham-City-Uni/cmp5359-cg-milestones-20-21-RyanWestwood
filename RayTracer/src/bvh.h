@@ -2,6 +2,7 @@
 #include "common.h"
 #include "hittable.h"
 #include "hittable_list.h"
+#include <memory>
 
 inline int Random_Int(int min, int max) {
     // Returns a random integer in [min,max].
@@ -33,13 +34,24 @@ bool Box_Z_Compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hitt
 class BVH_Node : public Hittable {
 public:
     BVH_Node() {}
+    BVH_Node(AABB box) : box(box) {}
     BVH_Node(const Hittable_List& list) : BVH_Node(list.objects, 0, list.objects.size()) {}
     BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, size_t start, size_t end);
 
     virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const override;
     virtual bool Bounding_Box(AABB& output_box) const override;
 
+    //  TODO: debugging
+    virtual std::shared_ptr<Hittable> Left() const override { return left; }
+    virtual std::shared_ptr<Hittable> Right() const override { return right; }
+    virtual AABB Box() const override{ return box; }
+
+    virtual void Left(std::shared_ptr<Hittable> l) { left = l; };
+    virtual void Right(std::shared_ptr<Hittable> r) { right = r; };
+    virtual void Box(AABB b) { box = b; };
+
 public: // left and right pointers to generic Hittables (any primitive) allow us to split our hierarchy
+    //  have the defaul box set to calculateable numbers?
     std::shared_ptr<Hittable> left;
     std::shared_ptr<Hittable> right;
     AABB box;
@@ -60,6 +72,7 @@ bool BVH_Node::Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) co
     return hit_left || hit_right;
 }
 
+static int count = 0;
 BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, size_t start, size_t end) {
     auto objects = src_objects; // Create a modifiable array of the source scene objects
 
@@ -99,6 +112,6 @@ BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, si
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
     box = Surrounding_Box(box_left, box_right);
+
+    std::cout << box << std::endl;
 }
-
-

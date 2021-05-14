@@ -6,18 +6,23 @@
 #include "camera.h"
 #include "Sphere.h"
 #include "SDL.h" 
-#include <fstream>
-#include <chrono>
 #include "material.h"
-#include <thread>
 #include "threadpool.h"
 #include "model.h"
 #include "Triangle.h"
 #include "bvh.h"
+#include "fileparser.h"
+#include <fstream>
+#include <chrono>
+#include <thread>
+#include <vector>
+#include <array>
+#include <memory>
 
 #define M_PI 3.14159265359
 
-//typedef std::vector<std::vector<Colour>> ColourArr;
+typedef std::vector<std::vector<Colour>> ColourArr;
+typedef std::vector<std::shared_ptr<Hittable>> NodeArr;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -152,6 +157,16 @@ Colour CollectiveColour(Uint32 col, SDL_Surface* screen, int spp) {
 	return result;
 }
 
+void ResetColours(ColourArr& arr) {
+	for (int x = 0; x < screen->w; x++)
+	{
+		for (int y = 0; y < screen->h; y++)
+		{
+			arr[x][y] = { 0,0,0 };
+		}
+	}
+}
+
 void FullRender(SDL_Surface* screen, const float aspect_ratio, const int image_width, const int image_height,
 	Camera& cam, Hittable_List& world, int spp, int max_depth)
 {
@@ -182,7 +197,7 @@ void FullRender(SDL_Surface* screen, const float aspect_ratio, const int image_w
 }
 
 void RenderPixel(SDL_Surface* screen, const float aspect_ratio, const int image_width, const int image_height,
-	Camera& cam, Hittable_List& world, std::vector<std::vector<Colour>>& colours, int x, int y, int spp, int max_depth)
+	Camera& cam, Hittable_List& world, ColourArr& colours, int x, int y, int spp, int max_depth)
 {
 	Colour background(0, 0, 0);
 	Colour pix_col = colours[x][y];
@@ -259,7 +274,6 @@ Hittable_List Test_Scene() {
 
 	Vec3f transform(0, 0.8, 0);
 	auto glass = std::make_shared<Dielectric>(1.5);
-
 	for (uint32_t i = 0; i < model->nfaces(); i++)
 	{
 		const Vec3f& v0 = model->vert(model->face(i)[0]);
@@ -279,8 +293,7 @@ Hittable_List Test_Scene() {
 	}
 
 	transform = Vec3f(-1.2, 0.8, 0);
-	auto mat_metal = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
-	mat_diffuse = std::make_shared<Lambertian>(Colour(0.8, 0.4, 0.7));
+	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
 	for (uint32_t i = 0; i < model->nfaces(); ++i) {
 		const Vec3f& v0 = model->vert(model->face(i)[0]);
 		const Vec3f& v1 = model->vert(model->face(i)[1]);
@@ -290,11 +303,39 @@ Hittable_List Test_Scene() {
 
 	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
 	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 8), 0.5, material4));
+
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
-#include <vector>
-#include <array>
+std::vector<AABB> nodes;
+void travserse_tree(std::shared_ptr<Hittable> n) {
+	if (n == nullptr) return;
+
+	auto a = n->Box();
+	std::cout << a << std::endl;
+	nodes.push_back(n->Box());
+
+	travserse_tree(n->Left());
+	travserse_tree(n->Right());
+}
+
+void create_tree(std::shared_ptr<Hittable> n, std::vector<AABB*> objs) {
+
+	n = std::make_shared<BVH_Node>(*objs.front());	
+	std::cout << *objs.front() << std::endl;
+	objs.erase(objs.begin(), objs.begin() + 1);
+
+	if (n->Box() == AABB({ 0,0,0 }, { 0,0,0 })) return;
+
+	create_tree(n->Left(), objs);
+	create_tree(n->Right(), objs);
+}
+
+#include "timer.h"
+
 int main(int argc, char** argv)
 {
 	// initialise SDL2
@@ -306,12 +347,12 @@ int main(int argc, char** argv)
 	int spp = 1;
 	const int max_depth = 50;
 
-	auto t_start = std::chrono::high_resolution_clock::now();
-	auto world = Random_Scene();
+	//auto t_start = std::chrono::high_resolution_clock::now();
+	//std::cout << "BVH creation: \n";
 	//auto world = Test_Scene();
-	auto t_end = std::chrono::high_resolution_clock::now();
-	auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-	std::cerr << "BVH-Construction:  " << passedTime << " ms\n";
+	//auto t_end = std::chrono::high_resolution_clock::now();
+	//auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+	//std::cerr << "BVH-Construction:  " << passedTime << " ms\n";
 
 	Point3f lookfrom(0, 4, 17);
 	Point3f lookat(0, 0, 0);
@@ -319,9 +360,10 @@ int main(int argc, char** argv)
 	auto dist_to_focus = 15.0;
 	auto aperature = 0.15;
 
+	//	TODO: Use lookfrom as pointer so only needs to be passed once?
 	Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperature, dist_to_focus);
 
-	std::vector<std::vector<Colour>> totalColour;
+	ColourArr totalColour;
 	for (int i = 0; i < screen->w; i++)
 	{
 		std::vector<Colour> arr;
@@ -331,11 +373,62 @@ int main(int argc, char** argv)
 		}
 		totalColour.emplace_back(arr);
 	}
+	ResetColours(totalColour);
 
-	SDL_Event e;
+
+	//	============================ All binary tree code below. ============================
+
+	/*
+	issue i did not realise in session. The binary files are written correctly with the data they are given. However, the 
+	data given does not match the bvh node constructors box.
+
+	the console should have all the values created printed out from the various methods. split by big gaps to make finding
+	the different starts of data easier. 
+
+	Good luck :) the code is an ulmighty level of jank.
+	*/
+
+	//	Prints box as its made. in bvh constructor
+	std::cout << "BVH_Node constructor: \n";
+	auto world = Random_Scene();
+
+	// break gap console
+	for (int i = 0; i < 50; i++)
+	{
+		std::cout << "\n";
+	}
+
+	//	Prints box as its recursing in traverse_tree()
+	std::cout << "Traverse tree: \n";
+	travserse_tree(world.objects.front());
+	GenerateFileFromObject(nodes, "updated-box.bvh");
+	// break gap console
+	for (int i = 0; i < 50; i++)
+	{
+		std::cout << "\n";
+	}
+
+	//	Prints box that in readobjectfromfile()
+	std::cout << "Read tree: \n";
+	std::vector<AABB*> a = ReadObjectFromFile("updated-box.bvh");
+	// break gap console
+	for (int i = 0; i < 50; i++)
+	{
+		std::cout << "\n";
+	}
+
+	//	Prints box thats recursing in createtree()
+	std::cout << "Create tree: \n";
+	Hittable_List b = Hittable_List();
+	b.objects.push_back(std::make_shared<BVH_Node>());
+	create_tree(b.objects.front(), a);
+
+	SDL_Event e; // breakpoint here.
 	bool running = true;
 	while (running) {
-		std::cout << "\rSPP: " << spp;
+		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));
+		SDL_RenderClear(renderer);
+		//std::cout << "\r          \rSPP: " << spp;
 
 		//=========================== START ===========================  
 
@@ -387,8 +480,38 @@ int main(int argc, char** argv)
 				case SDLK_ESCAPE:
 					running = false;
 					break;
+				case SDLK_LEFT:
+				case SDLK_a:
+					ResetColours(totalColour);
+					spp = 1;
+					lookfrom.x -= 1;
+					cam.LookFrom(lookfrom);
+					break;
+
+				case SDLK_RIGHT:
+				case SDLK_d:
+					ResetColours(totalColour);
+					spp = 1;
+					lookfrom.x += 1;
+					cam.LookFrom(lookfrom);
+					break;
+
+				case SDLK_UP:
+				case SDLK_w:
+					ResetColours(totalColour);
+					spp = 1;
+					lookfrom.z -= 1;
+					cam.LookFrom(lookfrom);
+					break;
+
+				case SDLK_DOWN:
+				case SDLK_s:
+					ResetColours(totalColour);
+					spp = 1;
+					lookfrom.z += 1;
+					cam.LookFrom(lookfrom);
+					break;
 				}
-				break;
 			}
 		}
 	}

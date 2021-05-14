@@ -23,6 +23,7 @@
     <ClInclude Include="src\bvh.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\fileparser.h" />
     <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\hittable.h" />
     <ClInclude Include="src\hittable_list.h" />
@@ -31,6 +32,7 @@
     <ClInclude Include="src\ray.h" />
     <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\threadpool.h" />
+    <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
