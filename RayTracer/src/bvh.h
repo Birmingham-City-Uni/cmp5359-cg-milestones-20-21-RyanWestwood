@@ -113,5 +113,5 @@ BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, si
 
     box = Surrounding_Box(box_left, box_right);
 
-    std::cout << box << std::endl;
+    //std::cout << box << std::endl;
 }

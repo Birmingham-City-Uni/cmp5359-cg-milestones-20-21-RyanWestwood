@@ -81,16 +81,21 @@ void Triangle(std::vector<Vec2i> p, TGAImage& image, TGAColor color) {
 
 int main(int argc, char** argv) {
 
-	2 == argc ? model = std::make_unique<Model>(Model(argv[1])) : model = std::make_unique<Model>(Model("res/cc.obj"));
+	std::string dir = "res/";
+	std::string filename = dir + "tree_palmShort";
+
+	2 == argc ? model = std::make_unique<Model>(Model(argv[1])) : model = std::make_unique<Model>(Model(filename));
+
+	auto mats = model->mats();
+	auto face = model->faces();
 
 	TGAImage image(width, height, TGAImage::RGB);
 	Vec3f light_dir(0, 0, -1);
-	for (int i = 0; i < model->nfaces(); i++) {
-		std::vector<int> face = model->face(i);
+	for (int i = 0; i < face.size(); i++) {
 		std::vector<Vec2i> screen_coords(3, Vec2i());
 		std::vector<Vec3f> world_coords(3, Vec3f());
 		for (int j = 0; j < 3; j++) {
-			Vec3f v = model->vert(face[j]);
+			Vec3f v = model->vert(face[i].vertexIndex[j]);
 			screen_coords[j] = Vec2i((v.x + 1) * width / 2, (v.y + 1) * height / 2);
 			world_coords[j] = v;
 		}
@@ -98,11 +103,12 @@ int main(int argc, char** argv) {
 		n.normalize();
 		float intensity = n * light_dir;
 		if (intensity > 0) {
-			Triangle(screen_coords, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+			auto colour = mats.size() != 0 ? mats[face[i].mat] : Material("Default");
+			Triangle(screen_coords, image, TGAColor(intensity * 255 * colour.Kd.x, intensity * 255 * colour.Kd.y, intensity * 255 * colour.Kd.z, 255));
 		}
 	}
 	image.flip_vertically();
-	image.write_tga_file("res/carlo.tga");
+	image.write_tga_file(filename + ".tga");
 
 	return 0;
 }

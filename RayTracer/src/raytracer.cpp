@@ -349,6 +349,7 @@ int main(int argc, char** argv)
 
 	//auto t_start = std::chrono::high_resolution_clock::now();
 	//std::cout << "BVH creation: \n";
+	auto world = Random_Scene();
 	//auto world = Test_Scene();
 	//auto t_end = std::chrono::high_resolution_clock::now();
 	//auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
@@ -376,52 +377,52 @@ int main(int argc, char** argv)
 	ResetColours(totalColour);
 
 
-	//	============================ All binary tree code below. ============================
+	////	============================ All binary tree code below. ============================
 
-	/*
-	issue i did not realise in session. The binary files are written correctly with the data they are given. However, the 
-	data given does not match the bvh node constructors box.
+	///*
+	//issue i did not realise in session. The binary files are written correctly with the data they are given. However, the 
+	//data given does not match the bvh node constructors box.
 
-	the console should have all the values created printed out from the various methods. split by big gaps to make finding
-	the different starts of data easier. 
+	//the console should have all the values created printed out from the various methods. split by big gaps to make finding
+	//the different starts of data easier. 
 
-	Good luck :) the code is an ulmighty level of jank.
-	*/
+	//Good luck :) the code is an ulmighty level of jank.
+	//*/
 
-	//	Prints box as its made. in bvh constructor
-	std::cout << "BVH_Node constructor: \n";
-	auto world = Random_Scene();
+	////	Prints box as its made. in bvh constructor
+	//std::cout << "BVH_Node constructor: \n";
+	//auto world = Random_Scene();
 
-	// break gap console
-	for (int i = 0; i < 50; i++)
-	{
-		std::cout << "\n";
-	}
+	//// break gap console
+	//for (int i = 0; i < 50; i++)
+	//{
+	//	std::cout << "\n";
+	//}
 
-	//	Prints box as its recursing in traverse_tree()
-	std::cout << "Traverse tree: \n";
-	travserse_tree(world.objects.front());
-	GenerateFileFromObject(nodes, "updated-box.bvh");
-	// break gap console
-	for (int i = 0; i < 50; i++)
-	{
-		std::cout << "\n";
-	}
+	////	Prints box as its recursing in traverse_tree()
+	//std::cout << "Traverse tree: \n";
+	//travserse_tree(world.objects.front());
+	//GenerateFileFromObject(nodes, "updated-box.bvh");
+	//// break gap console
+	//for (int i = 0; i < 50; i++)
+	//{
+	//	std::cout << "\n";
+	//}
 
-	//	Prints box that in readobjectfromfile()
-	std::cout << "Read tree: \n";
-	std::vector<AABB*> a = ReadObjectFromFile("updated-box.bvh");
-	// break gap console
-	for (int i = 0; i < 50; i++)
-	{
-		std::cout << "\n";
-	}
+	////	Prints box that in readobjectfromfile()
+	//std::cout << "Read tree: \n";
+	//std::vector<AABB*> a = ReadObjectFromFile("updated-box.bvh");
+	//// break gap console
+	//for (int i = 0; i < 50; i++)
+	//{
+	//	std::cout << "\n";
+	//}
 
-	//	Prints box thats recursing in createtree()
-	std::cout << "Create tree: \n";
-	Hittable_List b = Hittable_List();
-	b.objects.push_back(std::make_shared<BVH_Node>());
-	create_tree(b.objects.front(), a);
+	////	Prints box thats recursing in createtree()
+	//std::cout << "Create tree: \n";
+	//Hittable_List b = Hittable_List();
+	//b.objects.push_back(std::make_shared<BVH_Node>());
+	//create_tree(b.objects.front(), a);
 
 	SDL_Event e; // breakpoint here.
 	bool running = true;
