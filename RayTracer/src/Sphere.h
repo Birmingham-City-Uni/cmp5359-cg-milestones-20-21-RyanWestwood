@@ -10,7 +10,6 @@ public:
 	virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const override;
 	virtual bool Bounding_Box(AABB& output_box) const override;
 
-
 private:
 	Point3f centre;
 	double radius;

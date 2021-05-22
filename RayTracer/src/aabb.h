@@ -3,7 +3,7 @@
 
 class AABB {
 public:
-    AABB() {}
+    AABB() : minimum({ 0.F,0.F,0.F }), maximum({ 0.F, 0.F, 0.F }) {}
     AABB(const Point3f& mini, const Point3f& maxi) { minimum = mini; maximum = maxi; }
 
     Point3f Min() const { return minimum; }
@@ -33,7 +33,8 @@ public:
 
     friend std::ostream& operator << (std::ostream& s, AABB& v)
     {
-        return s << v.minimum << "\t" << v.maximum;
+        s << v.minimum << "\t" << v.maximum;
+        return s;
     }
 
     Point3f minimum;

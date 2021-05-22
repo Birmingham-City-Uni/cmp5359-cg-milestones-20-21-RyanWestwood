@@ -74,7 +74,7 @@ bool BVH_Node::Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) co
 
 static int count = 0;
 BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, size_t start, size_t end) {
-    auto objects = src_objects; // Create a modifiable array of the source scene objects
+    auto objects = src_objects;
 
     int axis = Random_Int(0, 2);
     auto comparator = (axis == 0) ? Box_X_Compare
@@ -113,5 +113,5 @@ BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, si
 
     box = Surrounding_Box(box_left, box_right);
 
-    //std::cout << box << std::endl;
+    std::cout << box << std::endl;
 }

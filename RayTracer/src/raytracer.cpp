@@ -12,12 +12,14 @@
 #include "Triangle.h"
 #include "bvh.h"
 #include "fileparser.h"
+#include "timer.h"
 #include <fstream>
 #include <chrono>
 #include <thread>
 #include <vector>
 #include <array>
 #include <memory>
+#include <queue>
 
 #define M_PI 3.14159265359
 
@@ -270,71 +272,175 @@ Hittable_List Random_Scene() {
 Hittable_List Test_Scene() {
 	Hittable_List world;
 
-	Model* model = new Model("res/cc.obj");
+	Model* model = new Model("res/cc_t");
 
 	Vec3f transform(0, 0.8, 0);
 	auto glass = std::make_shared<Dielectric>(1.5);
 	for (uint32_t i = 0; i < model->nfaces(); i++)
 	{
-		const Vec3f& v0 = model->vert(model->face(i)[0]);
-		const Vec3f& v1 = model->vert(model->face(i)[1]);
-		const Vec3f& v2 = model->vert(model->face(i)[2]);
+		const std::vector<Face>& m = model->faces();
+		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
+		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
+		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
 
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, glass));
+		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
+		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
+		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
+
+		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, glass));
 	}
 
 	transform = Vec3f(1.2, 0.8, 0);
 	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
 	for (uint32_t i = 0; i < model->nfaces(); ++i) {
-		const Vec3f& v0 = model->vert(model->face(i)[0]);
-		const Vec3f& v1 = model->vert(model->face(i)[1]);
-		const Vec3f& v2 = model->vert(model->face(i)[2]);
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, mat_diffuse));
+		const std::vector<Face>& m = model->faces();
+		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
+		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
+		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
+
+		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
+		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
+		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
+
+		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat_diffuse));
 	}
 
 	transform = Vec3f(-1.2, 0.8, 0);
 	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
 	for (uint32_t i = 0; i < model->nfaces(); ++i) {
-		const Vec3f& v0 = model->vert(model->face(i)[0]);
-		const Vec3f& v1 = model->vert(model->face(i)[1]);
-		const Vec3f& v2 = model->vert(model->face(i)[2]);
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, mat_metal));
+		const std::vector<Face>& m = model->faces();
+		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
+		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
+		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
+
+		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
+		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
+		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
+
+		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat_metal));
 	}
 
 	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
 	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
 
 	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 8), 0.5, material4));
+	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
 
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
+Hittable_List Small_Scene() {
+	Hittable_List world;
+	auto material1 = std::make_shared<Dielectric>(1.5);
+	world.Add(std::make_shared<Sphere>(Point3f(0, 1, 0), 1.0, material1));
+	auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
+	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2));
+	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
+	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3));
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 0), 0.5, material4));
+	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
+	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+	return Hittable_List(std::make_shared<BVH_Node>(world));
+}
+
 std::vector<AABB> nodes;
-void travserse_tree(std::shared_ptr<Hittable> n) {
+void travserse_tree(std::string place, std::shared_ptr<Hittable> n) {
 	if (n == nullptr) return;
 
-	auto a = n->Box();
-	std::cout << a << std::endl;
 	nodes.push_back(n->Box());
 
-	travserse_tree(n->Left());
-	travserse_tree(n->Right());
+	//	Debugging.
+	auto a = n->Box();
+	std::cout << place << a << "\n";
+
+	travserse_tree("Left: ", n->Left());
+	travserse_tree("Right: ", n->Right());
 }
 
-void create_tree(std::shared_ptr<Hittable> n, std::vector<AABB*> objs) {
+//	this is wrong need a new marker for end node?
+std::shared_ptr<Hittable> create(std::vector<AABB>& objs)
+{
 
-	n = std::make_shared<BVH_Node>(*objs.front());	
-	std::cout << *objs.front() << std::endl;
-	objs.erase(objs.begin(), objs.begin() + 1);
+	if (objs.size() == 0) return nullptr;
+	std::shared_ptr<Hittable> node = std::make_shared<BVH_Node>(objs.front());
 
-	if (n->Box() == AABB({ 0,0,0 }, { 0,0,0 })) return;
+	//	Using flt-max.bvh
+	if (objs.front() == AABB()) {
+		node->Right(std::make_shared<BVH_Node>());
+		objs.erase(begin(objs), begin(objs) + 2);
+		return node;
+	}
+	if (objs.front() == AABB({ FLT_MAX,FLT_MAX,FLT_MAX }, { FLT_MAX,FLT_MAX,FLT_MAX })) {
+		objs.erase(begin(objs));
+		return nullptr;
+	}
 
-	create_tree(n->Left(), objs);
-	create_tree(n->Right(), objs);
+	//	Using -test.bvh
+	//if (objs.front() == AABB()) {
+	//	objs.erase(begin(objs), begin(objs) + 2);
+	//	return nullptr;
+	//}
+	objs.erase(begin(objs));
+
+	node->Left(create(objs));
+	node->Right(create(objs));
+
+	return node;
 }
 
-#include "timer.h"
+void plebTree(std::shared_ptr<Hittable> root) {
+	auto a = root->Box();
+	std::cout << "\t\t\tROOT: " << a << "\n";
+
+	auto b = root->Left()->Box();
+	std::cout << "Left: " << b << "\t";
+	auto c = root->Right()->Box();
+	std::cout << "Right: " << c << "\n";
+
+	auto d = root->Left()->Left()->Box();
+	std::cout << "Left: " << d << "\t";
+	auto e = root->Left()->Right()->Box();
+	std::cout << "\t\t\t\tRight: " << e << "\n";
+
+	d = root->Right()->Left()->Box();
+	std::cout << "Left: " << d << "\t";
+	e = root->Right()->Right()->Box();
+	std::cout << "Right: " << e << "\n";
+
+	d = root->Right()->Left()->Left()->Box();
+	std::cout << "Left: " << d << "\t";
+	e = root->Right()->Left()->Right()->Box();
+	std::cout << "\t\t\t\tRight: " << e << "\n";
+
+	d = root->Right()->Right()->Left()->Box();
+	std::cout << "Left: " << d << "\t";
+	e = root->Right()->Right()->Right()->Box();
+	std::cout << "\t\t\t\tRight: " << e << "\n";
+}
+
+std::shared_ptr<Hittable> plebTreeCreation(std::vector<AABB>& objs) {
+	std::shared_ptr<Hittable> root = std::make_shared<BVH_Node>(objs[0]);
+
+	root->Left(std::make_shared<BVH_Node>(objs[1]));
+	root->Right(std::make_shared<BVH_Node>(objs[4]));
+
+	root->Left()->Left(std::make_shared<BVH_Node>(objs[2]));
+	root->Left()->Right(std::make_shared<BVH_Node>(objs[3]));
+
+	root->Right()->Left(std::make_shared<BVH_Node>(objs[5]));
+	root->Right()->Right(std::make_shared<BVH_Node>(objs[8]));
+
+	root->Right()->Left()->Left(std::make_shared<BVH_Node>(objs[6]));
+	root->Right()->Left()->Right(std::make_shared<BVH_Node>(objs[7]));
+
+	root->Right()->Right()->Left(std::make_shared<BVH_Node>(objs[9]));
+	root->Right()->Right()->Right(std::make_shared<BVH_Node>(objs[10]));
+
+	return root;
+}
+
+void printGap() { std::cout << "\n\n"; }
 
 int main(int argc, char** argv)
 {
@@ -349,13 +455,15 @@ int main(int argc, char** argv)
 
 	//auto t_start = std::chrono::high_resolution_clock::now();
 	//std::cout << "BVH creation: \n";
-	auto world = Random_Scene();
+	//auto world = Random_Scene();
 	//auto world = Test_Scene();
+	//auto world = Small_Scene();
+	//std::cout << "hit" << std::endl;
 	//auto t_end = std::chrono::high_resolution_clock::now();
 	//auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
 	//std::cerr << "BVH-Construction:  " << passedTime << " ms\n";
 
-	Point3f lookfrom(0, 4, 17);
+	Point3f lookfrom(0, 4, 15);
 	Point3f lookat(0, 0, 0);
 	Vec3f vup(0, 1, 0);
 	auto dist_to_focus = 15.0;
@@ -376,53 +484,68 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
+	/////////////////////////////////////////////	BVH DEBUGGING  ///////////////////////////////////////////
+	//auto filenamebvh = "small-scene-flt-max.bvh";
 
-	////	============================ All binary tree code below. ============================
-
-	///*
-	//issue i did not realise in session. The binary files are written correctly with the data they are given. However, the 
-	//data given does not match the bvh node constructors box.
-
-	//the console should have all the values created printed out from the various methods. split by big gaps to make finding
-	//the different starts of data easier. 
-
-	//Good luck :) the code is an ulmighty level of jank.
-	//*/
-
-	////	Prints box as its made. in bvh constructor
+	//	Prints box as its made. in bvh constructor
 	//std::cout << "BVH_Node constructor: \n";
-	//auto world = Random_Scene();
+	//auto world = Small_Scene();
 
-	//// break gap console
-	//for (int i = 0; i < 50; i++)
-	//{
-	//	std::cout << "\n";
-	//}
+	//printGap();
 
-	////	Prints box as its recursing in traverse_tree()
+	//	Prints box as its recursing in traverse_tree()
 	//std::cout << "Traverse tree: \n";
-	//travserse_tree(world.objects.front());
-	//GenerateFileFromObject(nodes, "updated-box.bvh");
-	//// break gap console
-	//for (int i = 0; i < 50; i++)
+	////travserse_tree("Root: ", world.objects.front());
+	//for (int i = 1; i < nodes.size(); i++)
 	//{
-	//	std::cout << "\n";
+	//	if (nodes[i] == AABB()) {
+	//		if (nodes[i - 1] == AABB()) {
+	//			nodes.insert(begin(nodes) + (i + 1), AABB({ FLT_MAX,FLT_MAX,FLT_MAX }, { FLT_MAX,FLT_MAX,FLT_MAX }));
+	//		}
+	//	}
 	//}
 
-	////	Prints box that in readobjectfromfile()
+	////for (auto& item : nodes) std::cout << item << "\n";
+
+	//GenerateFileFromObject(nodes, filenamebvh);
+	//printGap();
+
+	//	Prints box that in readobjectfromfile()s
 	//std::cout << "Read tree: \n";
-	//std::vector<AABB*> a = ReadObjectFromFile("updated-box.bvh");
-	//// break gap console
-	//for (int i = 0; i < 50; i++)
-	//{
-	//	std::cout << "\n";
-	//}
+	//std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
+	//printGap();
 
-	////	Prints box thats recursing in createtree()
+	//std::cout << "Vector: \n";
+	//for (auto& i : readObject) std::cout << i << "\n";
+	//printGap();
+
+	////Prints box thats recursing in createtree()
 	//std::cout << "Create tree: \n";
-	//Hittable_List b = Hittable_List();
-	//b.objects.push_back(std::make_shared<BVH_Node>());
-	//create_tree(b.objects.front(), a);
+	//std::shared_ptr<Hittable> root;
+	//root = create(readObject);
+
+	////Hittable_List debug;
+	////debug.objects.push_back(create(readObject));
+	//printGap();
+
+	//std::cout << "Traverse tree: \n";
+	//travserse_tree(root);
+	//printGap();
+	//travserse_tree(world.objects.front());
+
+	//	none debugging example.
+	//auto filenamebvh = "small-scene-test.bvh";
+	auto filenamebvh = "small-scene-test.bvh";
+
+	////travserse_tree(world.objects.front());
+	////GenerateFileFromObject(nodes, filenamebvh);
+	/////////////////////////////////////////////	BVH DEBUGGING ///////////////////////////////////////////
+
+	//	This is the correct binary tree hard coded for testing.
+	std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
+	Hittable_List world = Hittable_List();
+	auto root = plebTreeCreation(readObject);
+	world.objects.push_back(root);
 
 	SDL_Event e; // breakpoint here.
 	bool running = true;

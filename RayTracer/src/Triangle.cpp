@@ -32,7 +32,9 @@ bool Triangle::Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) co
 
     //TODO FIX tri norms
     //  ???? why did i make this comment?
-    rec.normal = normal;
+    //rec.normal = normal;
+    // by vertex normal and barycentrics
+    rec.normal = this->v1n * u + this->v2n * v + this->v0n * (1.0f - u - v);
     rec.mat_ptr = mat_ptr;
 
     return true;

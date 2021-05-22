@@ -29,7 +29,7 @@ std::string dir = "res/binary/";
 //}
 
 void GenerateFileFromObject(std::vector<AABB>& objects, const char* filename) {
-	std::cout << "Writing\n";
+	std::cout << "Writing...\n";
 
 	uint32_t bytes = objects.size() * sizeof(objects.front());
 
@@ -39,9 +39,11 @@ void GenerateFileFromObject(std::vector<AABB>& objects, const char* filename) {
 
 	file.write(reinterpret_cast<char*>(&objects.front()), bytes);
 	file.close();
+	
+	std::cout << "Finished!\n";
 }
-std::vector<AABB*> ReadObjectFromFile(const char* filename) {
-	std::cout << "Reading\n";
+std::vector<AABB> ReadObjectFromFile(const char* filename) {
+	std::cout << "Reading...\n";
 
 	std::ifstream infile(dir + filename, std::ifstream::binary);
 	if (!infile) std::cout << "ERROR 404\n";
@@ -54,7 +56,7 @@ std::vector<AABB*> ReadObjectFromFile(const char* filename) {
 	infile.read(buffer, bytes);
 	infile.close();
 
-	std::vector<AABB*> results;
+	std::vector<AABB> results;
 	for (int bytePosition = 0; bytePosition < bytes; bytePosition += 24)
 	{
 		Byte* obj = new Byte[24];
@@ -62,11 +64,14 @@ std::vector<AABB*> ReadObjectFromFile(const char* filename) {
 		{
 			obj[bit] = buffer[bytePosition + bit];
 		}
-		results.push_back((AABB*)obj);
-		std::cout << *(AABB*)obj << std::endl;
+		results.push_back(*(AABB*)obj);
+		//std::cout << *(AABB*)obj << std::endl;
 	}
 
-	//delete[] buffer;
+	delete[] buffer;
+
+	std::cout << "Finished!\n";
+	
 	return results;
 }
 
