@@ -30,7 +30,7 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Surface* screen;
 
-void init() {
+void SDL2init() {
 	SDL_Init(SDL_INIT_VIDEO);
 
 	SDL_Window* window = SDL_CreateWindow(
@@ -79,39 +79,6 @@ void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
 	case 4:
 		*(Uint32*)p = pixel;
 		break;
-	}
-}
-
-// https://stackoverflow.com/questions/53033971/how-to-get-the-color-of-a-specific-pixel-from-sdl-surface
-Uint32 getpixel(SDL_Surface* surface, int x, int y)
-{
-	int bpp = surface->format->BytesPerPixel;
-	/* Here p is the address to the pixel we want to retrieve */
-	Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
-
-	switch (bpp)
-	{
-	case 1:
-		return *p;
-		break;
-
-	case 2:
-		return *(Uint16*)p;
-		break;
-
-	case 3:
-		if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-			return p[0] << 16 | p[1] << 8 | p[2];
-		else
-			return p[0] | p[1] << 8 | p[2] << 16;
-		break;
-
-	case 4:
-		return *(Uint32*)p;
-		break;
-
-	default:
-		return 0;
 	}
 }
 
@@ -276,49 +243,15 @@ Hittable_List Test_Scene() {
 
 	Vec3f transform(0, 0.8, 0);
 	auto glass = std::make_shared<Dielectric>(1.5);
-	for (uint32_t i = 0; i < model->nfaces(); i++)
-	{
-		const std::vector<Face>& m = model->faces();
-		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
-		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
-		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
-
-		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
-		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
-		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
-
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, glass));
-	}
+	model->AddToWorld(world, transform, glass);
 
 	transform = Vec3f(1.2, 0.8, 0);
 	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	for (uint32_t i = 0; i < model->nfaces(); ++i) {
-		const std::vector<Face>& m = model->faces();
-		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
-		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
-		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
-
-		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
-		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
-		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
-
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat_diffuse));
-	}
+	model->AddToWorld(world, transform, mat_diffuse);
 
 	transform = Vec3f(-1.2, 0.8, 0);
 	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
-	for (uint32_t i = 0; i < model->nfaces(); ++i) {
-		const std::vector<Face>& m = model->faces();
-		const Vec3f& v0 = model->vert(m[i].vertexIndex[0]);
-		const Vec3f& v1 = model->vert(m[i].vertexIndex[1]);
-		const Vec3f& v2 = model->vert(m[i].vertexIndex[2]);
-
-		const Vec3f& v0n = model->vertNorm(m[i].vertexNormalsIndex[0]);
-		const Vec3f& v1n = model->vertNorm(m[i].vertexNormalsIndex[1]);
-		const Vec3f& v2n = model->vertNorm(m[i].vertexNormalsIndex[2]);
-
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat_metal));
-	}
+	model->AddToWorld(world, transform, mat_metal);
 
 	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
 	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
@@ -327,6 +260,33 @@ Hittable_List Test_Scene() {
 	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
 
 	return Hittable_List(std::make_shared<BVH_Node>(world));
+}
+
+Hittable_List Test_Scene_BVH(std::shared_ptr<Hittable> bvh) {
+	Hittable_List world;
+	world.Add(bvh);
+
+	Model* model = new Model("res/cc_t");
+
+	Vec3f transform(0, 0.8, 0);
+	auto glass = std::make_shared<Dielectric>(1.5);
+	model->AddToWorld(world, transform, glass);
+
+	transform = Vec3f(1.2, 0.8, 0);
+	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
+	model->AddToWorld(world, transform, mat_diffuse);
+
+	transform = Vec3f(-1.2, 0.8, 0);
+	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
+	model->AddToWorld(world, transform, mat_metal);
+
+	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
+	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
+
+	return world;
 }
 
 Hittable_List Small_Scene() {
@@ -345,107 +305,37 @@ Hittable_List Small_Scene() {
 }
 
 std::vector<AABB> nodes;
-void travserse_tree(std::string place, std::shared_ptr<Hittable> n) {
+void Traverse_Tree(std::shared_ptr<Hittable> n) {
 	if (n == nullptr) return;
 
 	nodes.push_back(n->Box());
 
-	//	Debugging.
-	auto a = n->Box();
-	std::cout << place << a << "\n";
-
-	travserse_tree("Left: ", n->Left());
-	travserse_tree("Right: ", n->Right());
+	Traverse_Tree(n->Left());
+	Traverse_Tree(n->Right());
 }
 
-//	this is wrong need a new marker for end node?
-std::shared_ptr<Hittable> create(std::vector<AABB>& objs)
+std::shared_ptr<Hittable> Create_Tree(std::vector<AABB>& objs)
 {
-
 	if (objs.size() == 0) return nullptr;
-	std::shared_ptr<Hittable> node = std::make_shared<BVH_Node>(objs.front());
 
-	//	Using flt-max.bvh
 	if (objs.front() == AABB()) {
-		node->Right(std::make_shared<BVH_Node>());
-		objs.erase(begin(objs), begin(objs) + 2);
-		return node;
-	}
-	if (objs.front() == AABB({ FLT_MAX,FLT_MAX,FLT_MAX }, { FLT_MAX,FLT_MAX,FLT_MAX })) {
+		std::shared_ptr<Hittable> n = std::make_shared<BVH_Node>(objs.front());
 		objs.erase(begin(objs));
-		return nullptr;
+		return n;
 	}
 
-	//	Using -test.bvh
-	//if (objs.front() == AABB()) {
-	//	objs.erase(begin(objs), begin(objs) + 2);
-	//	return nullptr;
-	//}
+	std::shared_ptr<Hittable> node = std::make_shared<BVH_Node>(objs.front());
 	objs.erase(begin(objs));
 
-	node->Left(create(objs));
-	node->Right(create(objs));
+	node->Left(Create_Tree(objs));
+	node->Right(Create_Tree(objs));
 
 	return node;
 }
 
-void plebTree(std::shared_ptr<Hittable> root) {
-	auto a = root->Box();
-	std::cout << "\t\t\tROOT: " << a << "\n";
-
-	auto b = root->Left()->Box();
-	std::cout << "Left: " << b << "\t";
-	auto c = root->Right()->Box();
-	std::cout << "Right: " << c << "\n";
-
-	auto d = root->Left()->Left()->Box();
-	std::cout << "Left: " << d << "\t";
-	auto e = root->Left()->Right()->Box();
-	std::cout << "\t\t\t\tRight: " << e << "\n";
-
-	d = root->Right()->Left()->Box();
-	std::cout << "Left: " << d << "\t";
-	e = root->Right()->Right()->Box();
-	std::cout << "Right: " << e << "\n";
-
-	d = root->Right()->Left()->Left()->Box();
-	std::cout << "Left: " << d << "\t";
-	e = root->Right()->Left()->Right()->Box();
-	std::cout << "\t\t\t\tRight: " << e << "\n";
-
-	d = root->Right()->Right()->Left()->Box();
-	std::cout << "Left: " << d << "\t";
-	e = root->Right()->Right()->Right()->Box();
-	std::cout << "\t\t\t\tRight: " << e << "\n";
-}
-
-std::shared_ptr<Hittable> plebTreeCreation(std::vector<AABB>& objs) {
-	std::shared_ptr<Hittable> root = std::make_shared<BVH_Node>(objs[0]);
-
-	root->Left(std::make_shared<BVH_Node>(objs[1]));
-	root->Right(std::make_shared<BVH_Node>(objs[4]));
-
-	root->Left()->Left(std::make_shared<BVH_Node>(objs[2]));
-	root->Left()->Right(std::make_shared<BVH_Node>(objs[3]));
-
-	root->Right()->Left(std::make_shared<BVH_Node>(objs[5]));
-	root->Right()->Right(std::make_shared<BVH_Node>(objs[8]));
-
-	root->Right()->Left()->Left(std::make_shared<BVH_Node>(objs[6]));
-	root->Right()->Left()->Right(std::make_shared<BVH_Node>(objs[7]));
-
-	root->Right()->Right()->Left(std::make_shared<BVH_Node>(objs[9]));
-	root->Right()->Right()->Right(std::make_shared<BVH_Node>(objs[10]));
-
-	return root;
-}
-
-void printGap() { std::cout << "\n\n"; }
-
 int main(int argc, char** argv)
 {
-	// initialise SDL2
-	init();
+	SDL2init();
 
 	const float aspect_ratio = 16.0 / 9;
 	const int image_width = screen->w;
@@ -453,15 +343,7 @@ int main(int argc, char** argv)
 	int spp = 1;
 	const int max_depth = 50;
 
-	//auto t_start = std::chrono::high_resolution_clock::now();
-	//std::cout << "BVH creation: \n";
-	//auto world = Random_Scene();
-	//auto world = Test_Scene();
-	//auto world = Small_Scene();
-	//std::cout << "hit" << std::endl;
-	//auto t_end = std::chrono::high_resolution_clock::now();
-	//auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-	//std::cerr << "BVH-Construction:  " << passedTime << " ms\n";
+	Hittable_List world;
 
 	Point3f lookfrom(0, 4, 15);
 	Point3f lookat(0, 0, 0);
@@ -484,70 +366,34 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
-	/////////////////////////////////////////////	BVH DEBUGGING  ///////////////////////////////////////////
-	//auto filenamebvh = "small-scene-flt-max.bvh";
+	std::string filenamebvh = "test-scene.bvh";
+	std::ifstream infile(dir + filenamebvh, std::ifstream::binary);
+	if (!infile) {
 
-	//	Prints box as its made. in bvh constructor
-	//std::cout << "BVH_Node constructor: \n";
-	//auto world = Small_Scene();
+		auto t_start = std::chrono::high_resolution_clock::now();
 
-	//printGap();
+		world = Test_Scene();
+		Traverse_Tree(world.objects.front());
+		GenerateFileFromObject(nodes, filenamebvh);
 
-	//	Prints box as its recursing in traverse_tree()
-	//std::cout << "Traverse tree: \n";
-	////travserse_tree("Root: ", world.objects.front());
-	//for (int i = 1; i < nodes.size(); i++)
-	//{
-	//	if (nodes[i] == AABB()) {
-	//		if (nodes[i - 1] == AABB()) {
-	//			nodes.insert(begin(nodes) + (i + 1), AABB({ FLT_MAX,FLT_MAX,FLT_MAX }, { FLT_MAX,FLT_MAX,FLT_MAX }));
-	//		}
-	//	}
-	//}
+		auto t_end = std::chrono::high_resolution_clock::now();
+		auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+		std::cerr << "BVH file creation:  " << passedTime << " ms\n";
+	}
+	else {
+		auto t_start = std::chrono::high_resolution_clock::now();
 
-	////for (auto& item : nodes) std::cout << item << "\n";
+		std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
+		std::shared_ptr<Hittable> bvh;
+		bvh = Create_Tree(readObject);
+		world = Test_Scene_BVH(bvh);
 
-	//GenerateFileFromObject(nodes, filenamebvh);
-	//printGap();
+		auto t_end = std::chrono::high_resolution_clock::now();
+		auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+		std::cerr << "BVH file read:  " << passedTime << " ms\n";
+	}
 
-	//	Prints box that in readobjectfromfile()s
-	//std::cout << "Read tree: \n";
-	//std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
-	//printGap();
-
-	//std::cout << "Vector: \n";
-	//for (auto& i : readObject) std::cout << i << "\n";
-	//printGap();
-
-	////Prints box thats recursing in createtree()
-	//std::cout << "Create tree: \n";
-	//std::shared_ptr<Hittable> root;
-	//root = create(readObject);
-
-	////Hittable_List debug;
-	////debug.objects.push_back(create(readObject));
-	//printGap();
-
-	//std::cout << "Traverse tree: \n";
-	//travserse_tree(root);
-	//printGap();
-	//travserse_tree(world.objects.front());
-
-	//	none debugging example.
-	//auto filenamebvh = "small-scene-test.bvh";
-	auto filenamebvh = "small-scene-test.bvh";
-
-	////travserse_tree(world.objects.front());
-	////GenerateFileFromObject(nodes, filenamebvh);
-	/////////////////////////////////////////////	BVH DEBUGGING ///////////////////////////////////////////
-
-	//	This is the correct binary tree hard coded for testing.
-	std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
-	Hittable_List world = Hittable_List();
-	auto root = plebTreeCreation(readObject);
-	world.objects.push_back(root);
-
-	SDL_Event e; // breakpoint here.
+	SDL_Event e;
 	bool running = true;
 	while (running) {
 		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));

@@ -36,9 +36,11 @@
     <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\hittable_list.cpp" />
     <ClCompile Include="src\aabb.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\raytracer.cpp" />
+    <ClCompile Include="src\sphere.cpp" />
     <ClCompile Include="src\Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

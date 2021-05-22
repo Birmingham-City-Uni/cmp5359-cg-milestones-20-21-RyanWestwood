@@ -41,7 +41,6 @@ public:
     virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const override;
     virtual bool Bounding_Box(AABB& output_box) const override;
 
-    //  TODO: debugging
     virtual std::shared_ptr<Hittable> Left() const override { return left; }
     virtual std::shared_ptr<Hittable> Right() const override { return right; }
     virtual AABB Box() const override{ return box; }
@@ -50,8 +49,7 @@ public:
     virtual void Right(std::shared_ptr<Hittable> r) { right = r; };
     virtual void Box(AABB b) { box = b; };
 
-public: // left and right pointers to generic Hittables (any primitive) allow us to split our hierarchy
-    //  have the defaul box set to calculateable numbers?
+public: 
     std::shared_ptr<Hittable> left;
     std::shared_ptr<Hittable> right;
     AABB box;
@@ -112,6 +110,4 @@ BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, si
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
     box = Surrounding_Box(box_left, box_right);
-
-    std::cout << box << std::endl;
 }
