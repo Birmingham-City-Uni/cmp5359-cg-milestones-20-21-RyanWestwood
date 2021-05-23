@@ -7,7 +7,9 @@
 #include "Triangle.h"
 
 struct Face {
-	std::vector<int> vertexIndex, textureCoordsIndex, vertexNormalsIndex;
+	std::vector<int> vertexIndex;
+	std::vector<int> textureCoordsIndex;
+	std::vector<int> vertexNormalsIndex;
 
 	friend std::ostream& operator<<(std::ostream& os, const Face& f);
 };

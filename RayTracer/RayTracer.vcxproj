@@ -36,6 +36,9 @@
     <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bvh.cpp" />
+    <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\fileparser.cpp" />
     <ClCompile Include="src\hittable_list.cpp" />
     <ClCompile Include="src\aabb.cpp" />
     <ClCompile Include="src\model.cpp" />

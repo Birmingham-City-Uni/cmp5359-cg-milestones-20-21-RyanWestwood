@@ -4,7 +4,7 @@
 class AABB {
 public:
     AABB() : minimum({ 0.F,0.F,0.F }), maximum({ 0.F, 0.F, 0.F }) {}
-    AABB(const Point3f& mini, const Point3f& maxi) { minimum = mini; maximum = maxi; }
+    AABB(const Point3f& mini, const Point3f& maxi) : minimum(mini), maximum(maxi) {}
 
     Point3f Min() const { return minimum; }
     Point3f Max() const { return maximum; }

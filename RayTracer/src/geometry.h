@@ -117,6 +117,10 @@ public:
 	{
 		x *= r, y *= r, z *= r; return *this;
 	}
+	Vec3 operator +=(const Vec3<T>& v){
+		x += v.x, y += v.y, z += v.z;
+		return *this;
+	}
 	Vec3 crossProduct(const Vec3<T>& v) const
 	{
 		return Vec3<T>(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);

@@ -51,7 +51,7 @@ void Model::LoadModel(std::string filename) {
 	while (!in.eof()) {
 		std::getline(in, line);
 		std::istringstream iss(line.c_str());
-		char trash;
+		std::string trash;
 		if (!line.compare(0, 2, "v ")) { // Vertex
 			iss >> trash;
 			Vec3f v;
@@ -71,12 +71,11 @@ void Model::LoadModel(std::string filename) {
 			texCoords_.push_back(v);
 		}
 		if (!line.compare(0, 2, "f ")) { // face polygons
-			std::vector<int> v;
-			std::vector<int> t;
-			std::vector<int> n;
-			int slash, vIndex, tcIndex, vnIndex;
+			std::vector<int> v, t, n;
+			int vIndex, tcIndex, vnIndex;
+			char slash;
 			iss >> trash;
-			while (iss >> vIndex >> trash >> tcIndex >> trash >> vnIndex) {
+			while (iss >> vIndex >> slash >> tcIndex >> slash >> vnIndex) {
 				// in wavefront obj all indices start at 1, not zero
 				vIndex--;
 				tcIndex--;
@@ -93,16 +92,15 @@ void Model::LoadModel(std::string filename) {
 
 void Model::AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat)
 {
-	for (uint32_t i = 0; i < nfaces(); i++)
+	for (uint32_t i = 0; i < tris_.size(); i++)
 	{
-		const std::vector<Face>& m = faces();
-		const Vec3f& v0 = vert(m[i].vertexIndex[0]);
-		const Vec3f& v1 = vert(m[i].vertexIndex[1]);
-		const Vec3f& v2 = vert(m[i].vertexIndex[2]);
+		const Vec3f v0 = verts_[tris_[i].vertexIndex[0]];
+		const Vec3f v1 = verts_[tris_[i].vertexIndex[1]];
+		const Vec3f v2 = verts_[tris_[i].vertexIndex[2]];
 
-		const Vec3f& v0n = vertNorm(m[i].vertexNormalsIndex[0]);
-		const Vec3f& v1n = vertNorm(m[i].vertexNormalsIndex[1]);
-		const Vec3f& v2n = vertNorm(m[i].vertexNormalsIndex[2]);
+		const Vec3f v0n = vertNorms_[tris_[i].vertexNormalsIndex[0]];
+		const Vec3f v1n = vertNorms_[tris_[i].vertexNormalsIndex[1]];
+		const Vec3f v2n = vertNorms_[tris_[i].vertexNormalsIndex[2]];
 
 		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat));
 	}

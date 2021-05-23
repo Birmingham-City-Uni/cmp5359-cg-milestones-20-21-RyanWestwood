@@ -190,6 +190,13 @@ void RenderPixel(SDL_Surface* screen, const float aspect_ratio, const int image_
 	putpixel(screen, x, y, colour);
 }
 
+void Movement(ColourArr& tc, int& spp, Point3f& lf, Camera& cam, Vec3f dir) {
+	ResetColours(tc);
+	spp = 1;
+	lf += dir;
+	cam.LookFrom(lf);
+}
+
 Hittable_List Random_Scene() {
 	Hittable_List world;
 	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
@@ -262,29 +269,33 @@ Hittable_List Test_Scene() {
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
+//	make this choose which way to go instead of having 2 funcitons.
+//	wasted repeated code
+//	does bvh need to be at the front?
+//	The world shouldn't need these adds to them. How do i get the models to be drawn?
 Hittable_List Test_Scene_BVH(std::shared_ptr<Hittable> bvh) {
 	Hittable_List world;
 	world.Add(bvh);
 
-	Model* model = new Model("res/cc_t");
+	//Model* model = new Model("res/cc_t");
 
-	Vec3f transform(0, 0.8, 0);
-	auto glass = std::make_shared<Dielectric>(1.5);
-	model->AddToWorld(world, transform, glass);
+	//Vec3f transform(0, 0.8, 0);
+	//auto glass = std::make_shared<Dielectric>(1.5);
+	//model->AddToWorld(world, transform, glass);
 
-	transform = Vec3f(1.2, 0.8, 0);
-	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	model->AddToWorld(world, transform, mat_diffuse);
+	//transform = Vec3f(1.2, 0.8, 0);
+	//auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
+	//model->AddToWorld(world, transform, mat_diffuse);
 
-	transform = Vec3f(-1.2, 0.8, 0);
-	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
-	model->AddToWorld(world, transform, mat_metal);
+	//transform = Vec3f(-1.2, 0.8, 0);
+	//auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
+	//model->AddToWorld(world, transform, mat_metal);
 
-	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
-	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+	//auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
+	//world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
 
-	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
+	//auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+	//world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
 
 	return world;
 }
@@ -343,8 +354,6 @@ int main(int argc, char** argv)
 	int spp = 1;
 	const int max_depth = 50;
 
-	Hittable_List world;
-
 	Point3f lookfrom(0, 4, 15);
 	Point3f lookat(0, 0, 0);
 	Vec3f vup(0, 1, 0);
@@ -366,31 +375,21 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
+	Hittable_List world;
 	std::string filenamebvh = "test-scene.bvh";
-	std::ifstream infile(dir + filenamebvh, std::ifstream::binary);
+	std::ifstream infile("res/binary/" + filenamebvh, std::ifstream::binary);
 	if (!infile) {
-
-		auto t_start = std::chrono::high_resolution_clock::now();
-
+		Timer t("BVH file generation: ");
 		world = Test_Scene();
 		Traverse_Tree(world.objects.front());
-		GenerateFileFromObject(nodes, filenamebvh);
-
-		auto t_end = std::chrono::high_resolution_clock::now();
-		auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		std::cerr << "BVH file creation:  " << passedTime << " ms\n";
+		Write(nodes, filenamebvh);
 	}
 	else {
-		auto t_start = std::chrono::high_resolution_clock::now();
-
-		std::vector<AABB> readObject = ReadObjectFromFile(filenamebvh);
+		Timer t("BVH file read: ");
+		std::vector<AABB> readObject = Read(filenamebvh);
 		std::shared_ptr<Hittable> bvh;
 		bvh = Create_Tree(readObject);
 		world = Test_Scene_BVH(bvh);
-
-		auto t_end = std::chrono::high_resolution_clock::now();
-		auto passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		std::cerr << "BVH file read:  " << passedTime << " ms\n";
 	}
 
 	SDL_Event e;
@@ -398,25 +397,18 @@ int main(int argc, char** argv)
 	while (running) {
 		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));
 		SDL_RenderClear(renderer);
-		//std::cout << "\r          \rSPP: " << spp;
-
-		//=========================== START ===========================  
+		std::cout << "\r          \rSPP: " << spp - 1;
 
 		//=========================== Single thread =========================== 
-		//t_start = std::chrono::high_resolution_clock::now();
-
-		////FullRender(screen, aspect_ratio, image_width, image_height, cam, world, spp, max_depth);
-
-		//t_end = std::chrono::high_resolution_clock::now();
-		//passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		//std::cerr << "\tSingle-thread render time:  " << passedTime << " ms\n";
-
+		{
+			//Timer t("Single-thread frame render time: ");
+			//FullRender(screen, aspect_ratio, image_width, image_height, cam, world, spp, max_depth);
+		}
 
 		//=========================== 100% CPU - multi-thread =========================== 
 		{
-			//t_start = std::chrono::high_resolution_clock::now();
 			ThreadPool pool(std::thread::hardware_concurrency());
-
+			//Timer t("Frame render time: ");
 			for (int x = screen->w - 1; x >= 0; x--) {
 				for (int y = screen->h - 1; y >= 0; y--)
 				{
@@ -424,11 +416,6 @@ int main(int argc, char** argv)
 				}
 			}
 		}
-		//t_end = std::chrono::high_resolution_clock::now();
-		//passedTime = std::chrono::duration<double, std::milli>(t_end - t_start).count();
-		//std::cerr << "\tThreadpool multi-threaded render time:  " << passedTime << " ms\n";
-
-		//=========================== END ===========================  
 		spp++;
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, screen);
@@ -452,34 +439,22 @@ int main(int argc, char** argv)
 					break;
 				case SDLK_LEFT:
 				case SDLK_a:
-					ResetColours(totalColour);
-					spp = 1;
-					lookfrom.x -= 1;
-					cam.LookFrom(lookfrom);
+					Movement(totalColour, spp, lookfrom, cam, {-1,0,0});
 					break;
 
 				case SDLK_RIGHT:
 				case SDLK_d:
-					ResetColours(totalColour);
-					spp = 1;
-					lookfrom.x += 1;
-					cam.LookFrom(lookfrom);
+					Movement(totalColour, spp, lookfrom, cam, {1,0,0});
 					break;
 
 				case SDLK_UP:
 				case SDLK_w:
-					ResetColours(totalColour);
-					spp = 1;
-					lookfrom.z -= 1;
-					cam.LookFrom(lookfrom);
+					Movement(totalColour, spp, lookfrom, cam, {0,0,-1});
 					break;
 
 				case SDLK_DOWN:
 				case SDLK_s:
-					ResetColours(totalColour);
-					spp = 1;
-					lookfrom.z += 1;
-					cam.LookFrom(lookfrom);
+					Movement(totalColour, spp, lookfrom, cam, {0,0,1});
 					break;
 				}
 			}

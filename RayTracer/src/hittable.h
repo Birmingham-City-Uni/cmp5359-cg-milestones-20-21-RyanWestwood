@@ -23,7 +23,6 @@ public:
 	virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const = 0;
 	virtual bool Bounding_Box(AABB& output_box) const = 0;
 
-	//	TODO: Debugging
 	virtual std::shared_ptr<Hittable> Left() const { return nullptr; };
 	virtual std::shared_ptr<Hittable> Right() const { return nullptr; };
 	virtual AABB Box() const { return AABB(); };
