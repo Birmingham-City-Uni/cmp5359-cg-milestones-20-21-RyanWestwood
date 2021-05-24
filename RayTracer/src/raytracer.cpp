@@ -24,7 +24,6 @@
 #define M_PI 3.14159265359
 
 typedef std::vector<std::vector<Colour>> ColourArr;
-typedef std::vector<std::shared_ptr<Hittable>> NodeArr;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -269,37 +268,6 @@ Hittable_List Test_Scene() {
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
-//	make this choose which way to go instead of having 2 funcitons.
-//	wasted repeated code
-//	does bvh need to be at the front?
-//	The world shouldn't need these adds to them. How do i get the models to be drawn?
-Hittable_List Test_Scene_BVH(std::shared_ptr<Hittable> bvh) {
-	Hittable_List world;
-	world.Add(bvh);
-
-	//Model* model = new Model("res/cc_t");
-
-	//Vec3f transform(0, 0.8, 0);
-	//auto glass = std::make_shared<Dielectric>(1.5);
-	//model->AddToWorld(world, transform, glass);
-
-	//transform = Vec3f(1.2, 0.8, 0);
-	//auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	//model->AddToWorld(world, transform, mat_diffuse);
-
-	//transform = Vec3f(-1.2, 0.8, 0);
-	//auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
-	//model->AddToWorld(world, transform, mat_metal);
-
-	//auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
-	//world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
-
-	//auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	//world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
-
-	return world;
-}
-
 Hittable_List Small_Scene() {
 	Hittable_List world;
 	auto material1 = std::make_shared<Dielectric>(1.5);
@@ -315,28 +283,46 @@ Hittable_List Small_Scene() {
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
-std::vector<AABB> nodes;
+//TODO pass this as a reference to make it more readable?
+std::vector<std::shared_ptr<Hittable>> hittableNodes;
 void Traverse_Tree(std::shared_ptr<Hittable> n) {
 	if (n == nullptr) return;
 
-	nodes.push_back(n->Box());
+	hittableNodes.push_back(n);
+	std::cout << n->id << "\n";
 
 	Traverse_Tree(n->Left());
 	Traverse_Tree(n->Right());
 }
 
-std::shared_ptr<Hittable> Create_Tree(std::vector<AABB>& objs)
+std::shared_ptr<Hittable> Create_Tree(std::vector<Hittable*>& objs)
 {
 	if (objs.size() == 0) return nullptr;
 
-	if (objs.front() == AABB()) {
-		std::shared_ptr<Hittable> n = std::make_shared<BVH_Node>(objs.front());
+	int idx = objs.front()->id;
+
+	std::shared_ptr<Hittable> node;
+	if (idx == 1) { // BVH node
+		BVH_Node* bvh = (BVH_Node*)objs.front();
+		node = std::make_shared<BVH_Node>(bvh->box);
+		objs.erase(begin(objs));
+	}
+	else if (idx == 2) { // Triangle
+		Triangle* tri = (Triangle*)objs.front();
+		std::shared_ptr<Hittable> n = std::make_shared<Triangle>(
+			tri->v0, tri->v1, tri->v2,
+			tri->v0n, tri->v1n, tri->v2n,
+			nullptr
+			);
 		objs.erase(begin(objs));
 		return n;
 	}
-
-	std::shared_ptr<Hittable> node = std::make_shared<BVH_Node>(objs.front());
-	objs.erase(begin(objs));
+	else if (idx == 3) { //	sphere
+		Sphere* sph = (Sphere*)objs.front();
+		std::shared_ptr<Hittable> m = std::make_shared<Sphere>(sph->centre, sph->radius, nullptr);
+		objs.erase(begin(objs));
+		return m;
+	}
 
 	node->Left(Create_Tree(objs));
 	node->Right(Create_Tree(objs));
@@ -375,22 +361,31 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
+	//Hittable_List world;
+	//std::string filenamebvh = "mat-scene.bvh";
+	//std::ifstream infile("res/binary/" + filenamebvh, std::ifstream::binary);
+	//if (!infile) {
+	//	Timer t("BVH file generation: ");
+	//	world = Small_Scene();
+	//	Traverse_Tree(world.objects.front());
+	//	Write(aabbNodes, filenamebvh);
+	//}
+	//else {
+	//	Timer t("BVH file read: ");
+	//	std::vector<AABB> readObject = Read(filenamebvh);
+	//	std::shared_ptr<Hittable> bvh;
+	//	bvh = Create_Tree(readObject);
+	//	world = Test_Scene_BVH(bvh);
+	//}
+
+	const char* file = "jesusplease.bvh";
+	//auto world = Small_Scene();
+	//Traverse_Tree(world.objects.front());
+	//WriteNode(hittableNodes, file);
+	std::vector<Hittable*> a = ReadNode(file);
+	auto root = Create_Tree(a);
 	Hittable_List world;
-	std::string filenamebvh = "test-scene.bvh";
-	std::ifstream infile("res/binary/" + filenamebvh, std::ifstream::binary);
-	if (!infile) {
-		Timer t("BVH file generation: ");
-		world = Test_Scene();
-		Traverse_Tree(world.objects.front());
-		Write(nodes, filenamebvh);
-	}
-	else {
-		Timer t("BVH file read: ");
-		std::vector<AABB> readObject = Read(filenamebvh);
-		std::shared_ptr<Hittable> bvh;
-		bvh = Create_Tree(readObject);
-		world = Test_Scene_BVH(bvh);
-	}
+	world.Add(root);
 
 	SDL_Event e;
 	bool running = true;
@@ -439,22 +434,22 @@ int main(int argc, char** argv)
 					break;
 				case SDLK_LEFT:
 				case SDLK_a:
-					Movement(totalColour, spp, lookfrom, cam, {-1,0,0});
+					Movement(totalColour, spp, lookfrom, cam, { -1,0,0 });
 					break;
 
 				case SDLK_RIGHT:
 				case SDLK_d:
-					Movement(totalColour, spp, lookfrom, cam, {1,0,0});
+					Movement(totalColour, spp, lookfrom, cam, { 1,0,0 });
 					break;
 
 				case SDLK_UP:
 				case SDLK_w:
-					Movement(totalColour, spp, lookfrom, cam, {0,0,-1});
+					Movement(totalColour, spp, lookfrom, cam, { 0,0,-1 });
 					break;
 
 				case SDLK_DOWN:
 				case SDLK_s:
-					Movement(totalColour, spp, lookfrom, cam, {0,0,1});
+					Movement(totalColour, spp, lookfrom, cam, { 0,0,1 });
 					break;
 				}
 			}

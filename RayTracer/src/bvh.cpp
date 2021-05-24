@@ -42,6 +42,7 @@ bool BVH_Node::Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) co
 }
 
 BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, size_t start, size_t end) {
+    id = 1;
     auto objects = src_objects;
 
     int axis = Random_Int(0, 2);

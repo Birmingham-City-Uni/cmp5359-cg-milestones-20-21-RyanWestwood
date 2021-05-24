@@ -30,4 +30,7 @@ public:
 	virtual void Left(std::shared_ptr<Hittable> l) {};
 	virtual void Right(std::shared_ptr<Hittable> r) {};
 	virtual void Box(AABB b) {};
+
+public:
+	int id = 0;
 };

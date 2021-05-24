@@ -7,9 +7,9 @@
 
 class BVH_Node : public Hittable {
 public:
-    BVH_Node() {}
-    BVH_Node(AABB box) : box(box) {}
-    BVH_Node(const Hittable_List& list) : BVH_Node(list.objects, 0, list.objects.size()) {}
+    BVH_Node() { id = 1; }
+    BVH_Node(AABB box) : box(box) { id = 1; }
+    BVH_Node(const Hittable_List& list) : BVH_Node(list.objects, 0, list.objects.size()) { id = 1; }
     BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, size_t start, size_t end);
 
     virtual bool Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const override;
