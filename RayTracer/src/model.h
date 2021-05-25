@@ -37,5 +37,5 @@ public:
 	Face& triangle(int idx);
 	std::vector<Face>& faces();
 
-	void AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat);
+	void AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat, int index);
 };

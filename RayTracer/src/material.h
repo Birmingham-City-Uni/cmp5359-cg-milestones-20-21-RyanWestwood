@@ -3,11 +3,11 @@
 #include "geometry.h"
 #include "hittable.h"
 
-Vec3f Reflect(const Vec3f& v, const Vec3f& n) {
+inline Vec3f Reflect(const Vec3f& v, const Vec3f& n) {
 	return v - 2 * v.dotProduct(n) * n;
 }
 
-Vec3f Refract(const Vec3f& uv, const Vec3f& n, double etai_over_etat) {
+inline Vec3f Refract(const Vec3f& uv, const Vec3f& n, double etai_over_etat) {
 	auto cos_theta = fmin(-uv.dotProduct(n), 1.0);
 	Vec3f r_out_perp = etai_over_etat * (uv + cos_theta * n);
 	Vec3f r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.norm())) * n;
@@ -20,11 +20,15 @@ class Material {
 public:
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const = 0;
 	virtual Colour Emitted() const { return Colour(0, 0, 0); }
+
+public:
+	int id = 0;
+	int index = 0;
 };
 
 class Lambertian : public Material {
 public:
-	Lambertian(const Colour& a) : albedo(a) {}
+	Lambertian(const Colour& a, int n) : albedo(a) { id = 1; index = n; }
 
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const override {
 		auto scatter_direction = rec.normal + Vec3f().Random_In_Unit_Sphere();
@@ -36,13 +40,13 @@ public:
 		return true;
 	}
 
-private:
+public:
 	Colour albedo;
 };
 
 class Metal : public Material {
 public:
-	Metal(const Colour& a, double f) : albedo(a), fuzz(f < 1 ? f : 1) {}
+	Metal(const Colour& a, double f, int n) : albedo(a), fuzz(f < 1 ? f : 1) { id = 2; index = n;}
 
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const override {
 		Vec3f reflected = Reflect(r_in.Direction().normalize(), rec.normal);
@@ -50,14 +54,14 @@ public:
 		attenuation = albedo;
 		return (scattered.Direction().dotProduct(rec.normal) > 0);
 	}
-private:
+public:
 	Colour albedo;
 	double fuzz;
 };
 
 class Dielectric : public Material {
 public:
-	Dielectric(double index_of_refraction) : ir(index_of_refraction) {}
+	Dielectric(double index_of_refraction, int n) : ir(index_of_refraction) { id = 3; index = n; }
 
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const override {
 		attenuation = Colour(1.0, 1.0, 1.0);
@@ -91,12 +95,13 @@ private:
 
 class Diffuse_Light : public Material {
 public:
-	Diffuse_Light() {}
-	Diffuse_Light(Colour c) : emit(std::make_shared<Colour>(c)) {}
+	Diffuse_Light() { id = 4; }
+	Diffuse_Light(Colour c, int n) : emit(std::make_shared<Colour>(c)), colour(c) { id = 4; index = n; }
 
 	virtual bool Scatter(const Ray& r_in, const Hit_Record& rec, Colour& attenuation, Ray& scattered) const override { return false; }
 	virtual Colour Emitted() const override { return *emit; }
 
 public:
 	std::shared_ptr<Colour> emit;
+	Colour colour;
 };

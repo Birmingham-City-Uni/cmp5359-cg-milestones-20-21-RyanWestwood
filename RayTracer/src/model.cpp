@@ -90,7 +90,7 @@ void Model::LoadModel(std::string filename) {
 	std::cerr << "# v# " << verts_.size() << " f# " << tris_.size() << std::endl;
 }
 
-void Model::AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat)
+void Model::AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat, int index)
 {
 	for (uint32_t i = 0; i < tris_.size(); i++)
 	{
@@ -102,7 +102,7 @@ void Model::AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Ma
 		const Vec3f v1n = vertNorms_[tris_[i].vertexNormalsIndex[1]];
 		const Vec3f v2n = vertNorms_[tris_[i].vertexNormalsIndex[2]];
 
-		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat));
+		world.Add(std::make_shared<Triangle>(v0 + transform, v1 + transform, v2 + transform, v0n, v1n, v2n, mat, index));
 	}
 }
 

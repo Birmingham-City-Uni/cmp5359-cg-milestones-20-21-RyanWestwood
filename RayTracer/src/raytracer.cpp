@@ -20,6 +20,7 @@
 #include <array>
 #include <memory>
 #include <queue>
+#include <map>
 
 #define M_PI 3.14159265359
 
@@ -196,90 +197,119 @@ void Movement(ColourArr& tc, int& spp, Point3f& lf, Camera& cam, Vec3f dir) {
 	cam.LookFrom(lf);
 }
 
-Hittable_List Random_Scene() {
-	Hittable_List world;
-	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
-	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+//Hittable_List Random_Scene() {
+//	Hittable_List world;
+//	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
+//	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+//
+//	for (int a = -11; a < 11; a++)
+//	{
+//		for (int b = -11; b < 11; b++)
+//		{
+//			auto choose_mat = Random_Double();
+//			Point3f centre(a + 0.9 * Random_Double(), 0.2, b + 0.9 * Random_Double());
+//			if ((centre - Point3f(4, 0.2, 0)).length() > 0.9) {
+//				std::shared_ptr<Material> sphere_material;
+//				if (choose_mat < 0.8) {
+//					//	Diffuse
+//					auto albedo = Colour::Random() * Colour::Random();
+//					sphere_material = std::make_shared<Lambertian>(albedo);
+//					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+//				}
+//				else if (choose_mat < 0.90) {
+//					//	Metal
+//					auto albedo = Colour::Random(0.5, 1);
+//					auto fuzz = Random_Double(0, 0.5);
+//					sphere_material = std::make_shared<Metal>(albedo, fuzz);
+//					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+//				}
+//				else {
+//					//	Glass
+//					sphere_material = std::make_shared<Dielectric>(1.5);
+//					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+//				}
+//			}
+//		}
+//	}
+//	auto material1 = std::make_shared<Dielectric>(1.5);
+//	world.Add(std::make_shared<Sphere>(Point3f(0, 1, 0), 1.0, material1));
+//	auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
+//	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2));
+//	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
+//	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3));
+//	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
+//	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 0), 0.5, material4));
+//
+//	return Hittable_List(std::make_shared<BVH_Node>(world));
+//}
 
-	for (int a = -11; a < 11; a++)
-	{
-		for (int b = -11; b < 11; b++)
-		{
-			auto choose_mat = Random_Double();
-			Point3f centre(a + 0.9 * Random_Double(), 0.2, b + 0.9 * Random_Double());
-			if ((centre - Point3f(4, 0.2, 0)).length() > 0.9) {
-				std::shared_ptr<Material> sphere_material;
-				if (choose_mat < 0.8) {
-					//	Diffuse
-					auto albedo = Colour::Random() * Colour::Random();
-					sphere_material = std::make_shared<Lambertian>(albedo);
-					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
-				}
-				else if (choose_mat < 0.90) {
-					//	Metal
-					auto albedo = Colour::Random(0.5, 1);
-					auto fuzz = Random_Double(0, 0.5);
-					sphere_material = std::make_shared<Metal>(albedo, fuzz);
-					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
-				}
-				else {
-					//	Glass
-					sphere_material = std::make_shared<Dielectric>(1.5);
-					world.Add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
-				}
-			}
-		}
-	}
-	auto material1 = std::make_shared<Dielectric>(1.5);
-	world.Add(std::make_shared<Sphere>(Point3f(0, 1, 0), 1.0, material1));
-	auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2));
-	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
-	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3));
-	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 0), 0.5, material4));
-
-	return Hittable_List(std::make_shared<BVH_Node>(world));
-}
-
+std::vector<std::shared_ptr<Material>> materials;
 Hittable_List Test_Scene() {
 	Hittable_List world;
+	int index = 1;
 
 	Model* model = new Model("res/cc_t");
 
 	Vec3f transform(0, 0.8, 0);
-	auto glass = std::make_shared<Dielectric>(1.5);
-	model->AddToWorld(world, transform, glass);
+	auto glass = std::make_shared<Dielectric>(1.5, index);
+	model->AddToWorld(world, transform, glass, index);
+	materials.push_back(glass);
+	index++;
 
 	transform = Vec3f(1.2, 0.8, 0);
-	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	model->AddToWorld(world, transform, mat_diffuse);
+	auto mat_diffuse = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1), index);
+	model->AddToWorld(world, transform, mat_diffuse, index);
+	materials.push_back(mat_diffuse);
+	index++;
 
 	transform = Vec3f(-1.2, 0.8, 0);
-	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0);
-	model->AddToWorld(world, transform, mat_metal);
+	auto mat_metal = std::make_shared<Metal>(Colour(0.5, 0.6, 0.5), 0.0, index);
+	model->AddToWorld(world, transform, mat_metal, index);
+	materials.push_back(mat_metal);
+	index++;
 
-	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
-	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5), index);
+	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material, index));
+	materials.push_back(ground_material);
+	index++;
 
-	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4));
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255), index);
+	world.Add(std::make_shared<Sphere>(Point3f(0, 5, 0), 0.5, material4, index));
+	materials.push_back(material4);
+	index++;
 
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
 Hittable_List Small_Scene() {
 	Hittable_List world;
-	auto material1 = std::make_shared<Dielectric>(1.5);
-	world.Add(std::make_shared<Sphere>(Point3f(0, 1, 0), 1.0, material1));
-	auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
-	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2));
-	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
-	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3));
-	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255));
-	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 0), 0.5, material4));
-	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5));
-	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material));
+	int index = 1;
+
+	auto material1 = std::make_shared<Dielectric>(1.5, index);
+	world.Add(std::make_shared<Sphere>(Point3f(0, 1, 0), 1.0, material1, index));
+	materials.push_back(material1);
+	index++;
+
+	auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1), index);
+	world.Add(std::make_shared<Sphere>(Point3f(-4, 1, 0), 1.0, material2, index));
+	materials.push_back(material2);
+	index++;
+
+	auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0, index);
+	world.Add(std::make_shared<Sphere>(Point3f(4, 1, 0), 1.0, material3, index));
+	materials.push_back(material3);
+	index++;
+
+	auto material4 = std::make_shared<Diffuse_Light>(Colour(255, 255, 255), index);
+	world.Add(std::make_shared<Sphere>(Point3f(0, 3, 0), 0.5, material4, index));
+	materials.push_back(material4);
+	index++;
+
+	auto ground_material = std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5), index);
+	world.Add(std::make_shared<Sphere>(Point3f(0, -1000, 0), 1000, ground_material, index));
+	materials.push_back(ground_material);
+	index++;
+
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
 
@@ -289,14 +319,12 @@ void Traverse_Tree(std::shared_ptr<Hittable> n) {
 	if (n == nullptr) return;
 
 	hittableNodes.push_back(n);
-	std::cout << n->id << "\n";
 
 	Traverse_Tree(n->Left());
 	Traverse_Tree(n->Right());
 }
 
-std::shared_ptr<Hittable> Create_Tree(std::vector<Hittable*>& objs)
-{
+std::shared_ptr<Hittable> Create_Tree(std::vector<Hittable*>& objs, std::vector<std::shared_ptr<Material>>& mtl) {
 	if (objs.size() == 0) return nullptr;
 
 	int idx = objs.front()->id;
@@ -312,22 +340,66 @@ std::shared_ptr<Hittable> Create_Tree(std::vector<Hittable*>& objs)
 		std::shared_ptr<Hittable> n = std::make_shared<Triangle>(
 			tri->v0, tri->v1, tri->v2,
 			tri->v0n, tri->v1n, tri->v2n,
-			nullptr
+			mtl[tri->mat_index - 1],
+			tri->mat_index
 			);
 		objs.erase(begin(objs));
 		return n;
 	}
 	else if (idx == 3) { //	sphere
 		Sphere* sph = (Sphere*)objs.front();
-		std::shared_ptr<Hittable> m = std::make_shared<Sphere>(sph->centre, sph->radius, nullptr);
+		std::shared_ptr<Hittable> m = std::make_shared<Sphere>(sph->centre, sph->radius, mtl[sph->mat_index - 1], sph->mat_index);
 		objs.erase(begin(objs));
 		return m;
 	}
 
-	node->Left(Create_Tree(objs));
-	node->Right(Create_Tree(objs));
+	node->Left(Create_Tree(objs, mtl));
+	node->Right(Create_Tree(objs, mtl));
 
 	return node;
+}
+
+std::vector<std::shared_ptr<Material>> Create_Materials(std::vector<Material*>& mtls) {
+	std::vector<std::shared_ptr<Material>> result;
+	for (auto& material : mtls) {
+		int id = material->id;
+
+		if (id == 1) {	// Lambert
+			Lambertian* lambert = (Lambertian*)material;
+			std::shared_ptr<Material> n = std::make_shared<Lambertian>(
+				lambert->albedo,
+				lambert->index
+				);
+			result.push_back(n);
+		}
+		else if (id == 2) { // Metal
+			Metal* metal = (Metal*)material;
+			std::shared_ptr<Material> n = std::make_shared<Metal>(
+				metal->albedo,
+				metal->fuzz,
+				metal->index
+				);
+			result.push_back(n);
+		}
+		else if (id == 3) { // Dielectric
+			Dielectric* dielectric = (Dielectric*)material;
+			std::shared_ptr<Material> n = std::make_shared<Dielectric>(
+				dielectric->ir,
+				dielectric->index
+				);
+			result.push_back(n);
+		}
+		else if (id == 4) { // Diffuse_Light
+			Diffuse_Light* diffuse_light = (Diffuse_Light*)material;
+			std::shared_ptr<Material> n = std::make_shared<Diffuse_Light>(
+				diffuse_light->colour,
+				diffuse_light->index
+				);
+			result.push_back(n);
+		}
+	}
+
+	return result;
 }
 
 int main(int argc, char** argv)
@@ -361,31 +433,23 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
-	//Hittable_List world;
-	//std::string filenamebvh = "mat-scene.bvh";
-	//std::ifstream infile("res/binary/" + filenamebvh, std::ifstream::binary);
-	//if (!infile) {
-	//	Timer t("BVH file generation: ");
-	//	world = Small_Scene();
-	//	Traverse_Tree(world.objects.front());
-	//	Write(aabbNodes, filenamebvh);
-	//}
-	//else {
-	//	Timer t("BVH file read: ");
-	//	std::vector<AABB> readObject = Read(filenamebvh);
-	//	std::shared_ptr<Hittable> bvh;
-	//	bvh = Create_Tree(readObject);
-	//	world = Test_Scene_BVH(bvh);
-	//}
-
-	const char* file = "jesusplease.bvh";
-	//auto world = Small_Scene();
-	//Traverse_Tree(world.objects.front());
-	//WriteNode(hittableNodes, file);
-	std::vector<Hittable*> a = ReadNode(file);
-	auto root = Create_Tree(a);
 	Hittable_List world;
-	world.Add(root);
+	std::string file = "tri-sphere-scene";
+	std::ifstream bvhfile("res/binary/" + file + ".bvh", std::ifstream::binary);
+	std::ifstream matfile("res/binary/" + file + ".mtls", std::ifstream::binary);
+	if (!bvhfile || !matfile) {
+		world = Test_Scene();
+		Traverse_Tree(world.objects.front());
+		WriteNode(hittableNodes, file + ".bvh");
+		WriteMaterials(materials, file + ".mtls");
+	}
+	else {
+		std::vector<Material*> mtls = ReadMaterials(file + ".mtls");
+		std::vector<Hittable*> nodes = ReadNode(file + ".bvh");
+		auto materials = Create_Materials(mtls);
+		auto root = Create_Tree(nodes, materials);
+		world.Add(root);
+	}
 
 	SDL_Event e;
 	bool running = true;

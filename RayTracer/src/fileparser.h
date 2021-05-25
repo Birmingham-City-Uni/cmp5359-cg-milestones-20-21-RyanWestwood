@@ -8,9 +8,10 @@
 #include "bvh.h"
 #include "Sphere.h"
 #include "Triangle.h"
+#include "material.h"
 
-void Write(std::vector<AABB>& objects, std::string filename);
+void WriteMaterials(std::vector<std::shared_ptr<Material>> mats, std::string filename);
 void WriteNode(std::vector<std::shared_ptr<Hittable>>& objects, std::string filename);
 
-std::vector<AABB> Read(std::string filename);
+std::vector<Material*> ReadMaterials(std::string filename);
 std::vector<Hittable*> ReadNode(std::string filename);
