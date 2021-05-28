@@ -4,25 +4,26 @@ inline int Random_Int(int min, int max) {
     return static_cast<int>(Random_Double(min, max + 1));
 }
 
-inline bool Box_Compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b, int axis) {
+inline bool Box_Compare(const std::shared_ptr<Hittable>& a, const std::shared_ptr<Hittable>& b, int axis) {
     AABB box_a;
     AABB box_b;
 
-    if (!a->Bounding_Box(box_a) || !b->Bounding_Box(box_b))
+    if (!a->Bounding_Box(box_a) || !b->Bounding_Box(box_b)){
         std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
 
     return box_a.Min()[axis] < box_b.Min()[axis];
 }
 
-bool Box_X_Compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b) {
+bool Box_X_Compare(const std::shared_ptr<Hittable>& a, const std::shared_ptr<Hittable>& b) {
     return Box_Compare(a, b, 0);
 }
 
-bool Box_Y_Compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b) {
+bool Box_Y_Compare(const std::shared_ptr<Hittable>& a, const std::shared_ptr<Hittable>& b) {
     return Box_Compare(a, b, 1);
 }
 
-bool Box_Z_Compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b) {
+bool Box_Z_Compare(const std::shared_ptr<Hittable>& a, const std::shared_ptr<Hittable>& b) {
     return Box_Compare(a, b, 2);
 }
 
@@ -32,8 +33,9 @@ bool BVH_Node::Bounding_Box(AABB& output_box) const {
 }
 
 bool BVH_Node::Hit(const Ray& r, double t_min, double t_max, Hit_Record& rec) const {
-    if (!box.Hit(r, t_min, t_max))
+    if (!box.Hit(r, t_min, t_max)){
         return false;
+    }
 
     bool hit_left = left->Hit(r, t_min, t_max, rec);
     bool hit_right = right->Hit(r, t_min, hit_left ? rec.t : t_max, rec);
@@ -75,10 +77,8 @@ BVH_Node::BVH_Node(const std::vector<std::shared_ptr<Hittable>>& src_objects, si
 
     AABB box_left, box_right;
 
-    if (!left->Bounding_Box(box_left)
-        || !right->Bounding_Box(box_right)
-        )
+    if (!left->Bounding_Box(box_left) || !right->Bounding_Box(box_right)){
         std::cerr << "No bounding box in bvh_node constructor.\n";
-
+    }
     box = Surrounding_Box(box_left, box_right);
 }

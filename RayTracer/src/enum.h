@@ -1,0 +1,16 @@
+#pragma once
+
+enum {
+	MATERIAL = 0,
+	LAMBERTIAN,
+	METAL,
+	DIELECTRIC,
+	DIFFUSE_LIGHT
+};
+
+enum {
+	HITTABLE = 0,
+	BVH_NODE,		
+	TRIANGLE,		
+	SPHERE			
+};

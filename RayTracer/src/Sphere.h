@@ -16,3 +16,5 @@ public:
 	std::shared_ptr<Material> mat_ptr;
 	int mat_index;
 };
+
+double Hit_Sphere(const Point3f& centre, double radius, const Ray& r);

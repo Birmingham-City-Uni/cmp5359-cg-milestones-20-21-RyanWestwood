@@ -1,8 +1,7 @@
 #pragma once
-
 #include <vector>
-#include "geometry.h"
 #include <map>
+#include "geometry.h"
 #include "hittable_list.h"
 #include "Triangle.h"
 
@@ -25,7 +24,7 @@ private:
 
 public:
 	Model(std::string filename);
-	~Model();
+	~Model() = default;
 
 	int nverts();
 	int nfaces();
@@ -37,5 +36,5 @@ public:
 	Face& triangle(int idx);
 	std::vector<Face>& faces();
 
-	void AddToWorld(Hittable_List& world, Vec3f transform, std::shared_ptr<Material> mat, int index);
+	void AddToWorld(Hittable_List& world, Vec3f transform, const std::shared_ptr<Material>& mat, int index);
 };

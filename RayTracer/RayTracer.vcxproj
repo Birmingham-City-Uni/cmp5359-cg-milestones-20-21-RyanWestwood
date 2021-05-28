@@ -23,6 +23,7 @@
     <ClInclude Include="src\bvh.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\enum.h" />
     <ClInclude Include="src\fileparser.h" />
     <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\hittable.h" />
@@ -30,9 +31,14 @@
     <ClInclude Include="src\material.h" />
     <ClInclude Include="src\model.h" />
     <ClInclude Include="src\ray.h" />
+    <ClInclude Include="src\renderer.h" />
+    <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\Sphere.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\stb_image_write.h" />
     <ClInclude Include="src\threadpool.h" />
     <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\tree.h" />
     <ClInclude Include="src\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
@@ -43,7 +49,10 @@
     <ClCompile Include="src\aabb.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\raytracer.cpp" />
+    <ClCompile Include="src\renderer.cpp" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\sphere.cpp" />
+    <ClCompile Include="src\tree.cpp" />
     <ClCompile Include="src\Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

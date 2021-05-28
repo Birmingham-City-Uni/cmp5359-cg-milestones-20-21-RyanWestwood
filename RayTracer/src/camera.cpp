@@ -22,7 +22,7 @@ Camera::Camera(Point3f lookfrom, Point3f lookat, Vec3f vup, double vfov, double 
 Ray Camera::Get_Ray(double s, double t) const {
 	Vec3f rd = lens_radius * Vec3f().Random_In_Unit_Disk();
 	Vec3f offset = u * rd.x + v * rd.y;
-	return Ray(origin + offset, lower_left_corner + s * horizontal + t * vertical - origin - offset);
+	return {origin + offset, lower_left_corner + s * horizontal + t * vertical - origin - offset};
 }
 
 void Camera::LookFrom(Point3f lookfrom) {

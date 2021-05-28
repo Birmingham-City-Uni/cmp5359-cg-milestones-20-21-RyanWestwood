@@ -17,13 +17,16 @@ bool Hittable_List::Hit(const Ray& r, double t_min, double t_max, Hit_Record& re
 
 bool Hittable_List::Bounding_Box(AABB& output_box) const
 {
-	if (objects.empty()) return false;
-
+	if (objects.empty()){
+		return false;
+	}
 	AABB temp_box;
 	bool first_box = true;
 
 	for (const auto& object : objects) {
-		if (!object->Bounding_Box(temp_box)) return false;
+		if (!object->Bounding_Box(temp_box)){
+			return false;
+		}
 		output_box = first_box ? temp_box : Surrounding_Box(output_box, temp_box);
 		first_box = false;
 	}
