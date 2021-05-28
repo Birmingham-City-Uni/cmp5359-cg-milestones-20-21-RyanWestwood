@@ -117,7 +117,7 @@ public:
 	{
 		x *= r, y *= r, z *= r; return *this;
 	}
-	Vec3 operator +=(const Vec3<T>& v){
+	Vec3 operator +=(const Vec3<T>& v) {
 		x += v.x, y += v.y, z += v.z;
 		return *this;
 	}

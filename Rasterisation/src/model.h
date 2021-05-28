@@ -32,7 +32,7 @@ class Model {
 private:
 	std::vector<Vec3f> verts_;
 	std::vector<Vec3f> vertNorms_;
-	std::vector<Vec3f> texCoords_;
+	std::vector<Vec2f> texCoords_;
 	std::vector<Face> tris_;
 
 	std::map<std::string, Material> materials_;
@@ -49,7 +49,7 @@ public:
 
 	Vec3f vert(int i);
 	Vec3f vertNorm(int i);
-	Vec3f textureCoord(int i);
+	Vec2f textureCoord(int i);
 
 	Face& triangle(int idx);
 	std::vector<Face>& faces();

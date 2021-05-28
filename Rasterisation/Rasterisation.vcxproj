@@ -154,6 +154,8 @@
   <ItemGroup>
     <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\model.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\stb_image_write.h" />
     <ClInclude Include="src\tgaimage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

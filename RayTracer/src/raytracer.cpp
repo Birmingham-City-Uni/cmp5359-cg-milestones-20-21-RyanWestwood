@@ -81,12 +81,8 @@ int main(int argc, char** argv)
 	ColourArr totalColour;
 	for (int i = 0; i < screen->w; i++)
 	{
-		std::vector<Colour> arr;
-		for (int b = 0; b < screen->h; b++)
-		{
-			arr.push_back(Colour(0, 0, 0));
-		}
-		totalColour.emplace_back(arr);
+		std::vector<Colour> arr(screen->h);
+		totalColour.push_back(arr);
 	}
 	ResetColours(totalColour);
 
@@ -115,8 +111,8 @@ int main(int argc, char** argv)
 		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));
 		SDL_RenderClear(renderer);
 
-		//InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
-		StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 10);
+		InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
+		//StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 10);
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, screen);
 		if (texture == nullptr) {

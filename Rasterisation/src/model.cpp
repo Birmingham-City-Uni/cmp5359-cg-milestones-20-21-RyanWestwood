@@ -34,7 +34,7 @@ Vec3f Model::vertNorm(int i) {
 	return vertNorms_[i];
 }
 
-Vec3f Model::textureCoord(int i) {
+Vec2f Model::textureCoord(int i) {
 	return texCoords_[i];
 }
 
@@ -72,7 +72,7 @@ void Model::LoadModel(std::string filename) {
 		}
 		if (!line.compare(0, 3, "vt ")) { // Texture coordinates
 			iss >> trash;
-			Vec3f v;
+			Vec2f v;
 			for (int i = 0; i < 2; i++) iss >> v.raw[i];
 			texCoords_.push_back(v);
 		}
