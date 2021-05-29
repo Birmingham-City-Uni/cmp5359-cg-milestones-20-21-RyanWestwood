@@ -71,7 +71,8 @@ void Model::LoadModel(std::string filename) {
 			vertNorms_.push_back(v);
 		}
 		if (!line.compare(0, 3, "vt ")) { // Texture coordinates
-			iss >> trash;
+			std::string str;
+			iss >> str;
 			Vec2f v;
 			for (int i = 0; i < 2; i++) iss >> v.raw[i];
 			texCoords_.push_back(v);
@@ -159,6 +160,13 @@ void Model::LoadMaterial(std::string filename) {
 
 			mat->Ni = f;
 		}
+		if (!line.compare(0, 3, "Tf ")) { // Transmission filter
+			iss >> trash;
+			Vec3f v;
+			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+
+			mat->Tf = v;
+		}
 		if (!line.compare(0, 2, "d ")) { // Dissolve
 			iss >> trash;
 			float f;
@@ -180,7 +188,8 @@ void Model::LoadMaterial(std::string filename) {
 
 			mat->map_Kd = str;
 
-			//	TODO: load texture here?
+			unsigned bytePerPixel = 3;
+			mat->image = stbi_load("./res/cc_t.tga", &mat->w, &mat->h, &mat->n, bytePerPixel);
 		}
 	}
 	materials_.insert(std::make_pair(std::string(mat->name), Material(*mat)));
@@ -205,6 +214,7 @@ std::ostream& operator<<(std::ostream& os, const Material& m)
 		"Ks: " << m.Ks.x << ", " << m.Ks.y << ", " << m.Ks.z << "\n" <<
 		"Ns: " << m.Ns << "\n" <<
 		"Ni: " << m.Ni << "\n" <<
+		"Tf: " << m.Tf.x << ", " << m.Tf.y << ", " << m.Tf.z << "\n" <<
 		"d: " << m.d << "\n" <<
 		"illum: " << m.illum << "\n" <<
 		"map_Kd: " << m.map_Kd << "\n";

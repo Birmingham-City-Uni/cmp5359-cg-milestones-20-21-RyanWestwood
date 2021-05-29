@@ -7,10 +7,11 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
-
 #include "tgaimage.h"
 #include "model.h"
 #include "geometry.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define M_PI 3.14159265359
 static const float inchToMm = 25.4;
@@ -194,7 +195,6 @@ float edgeFunction(const Vec3f& a, const Vec3f& b, const Vec3f& c)
 	return (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]);
 }
 
-
 Matrix44f lookAt(const Vec3f from, const Vec3f to, const Vec3f _tmp = Vec3f(0, 1, 0))
 {
 	Vec3f forward = (from - to).normalize();
@@ -226,7 +226,7 @@ Matrix44f lookAt(const Vec3f from, const Vec3f to, const Vec3f _tmp = Vec3f(0, 1
 int main(int argc, char** argv) {
 
 	std::string dir = "./res/";
-	std::string filename = dir + "tree_palmShort";
+	std::string filename = dir + "cc_t";
 
 	2 == argc ? model = std::make_unique<Model>(Model(argv[1])) : model = std::make_unique<Model>(Model(filename));
 
@@ -276,6 +276,7 @@ int main(int argc, char** argv) {
 		Vec2f st0 = model->textureCoord(face.textureCoordsIndex[0]);
 		Vec2f st1 = model->textureCoord(face.textureCoordsIndex[1]);
 		Vec2f st2 = model->textureCoord(face.textureCoordsIndex[2]);
+
 		st0 *= v0Raster.z;
 		st1 *= v1Raster.z;
 		st2 *= v2Raster.z;
@@ -323,7 +324,7 @@ int main(int argc, char** argv) {
 
 						// correct for perspective distortion
 						st *= z;
-
+					
 						// If you need to compute the actual position of the shaded
 						// point in camera space. Proceed like with the other vertex attribute.
 						// Divide the point coordinates by the vertex z-coordinate then
@@ -353,14 +354,18 @@ int main(int argc, char** argv) {
 
 						//// Set the pixel value
 						auto colour = mats.size() != 0 ? mats[face.mat] : Material("Default");
-						TGAColor col = TGAColor(nDotView * colour.Kd.x * 255, nDotView * colour.Kd.y * 255, nDotView * colour.Kd.z * 255, 255);
+						if (st.y < 0) st.y *= -1;
+						auto aaa = mats[face.mat].GetPixel(1 - st.x, 1- st.y);
+
+						//TGAColor col = TGAColor(nDotView * colour.Kd.x * 255, nDotView * colour.Kd.y * 255, nDotView * colour.Kd.z * 255, 255);
+						TGAColor col = TGAColor(nDotView * aaa.r, nDotView * aaa.g, nDotView * aaa.b, 255);
 						image.set(x, y, col);
 					}
 				}
 			}
 		}
 	}
-	image.write_tga_file(filename + ".tga");
+	image.write_tga_file(filename + "-render.tga");
 
 	return 0;
 }

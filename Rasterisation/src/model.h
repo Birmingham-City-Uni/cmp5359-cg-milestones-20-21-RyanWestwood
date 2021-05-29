@@ -1,8 +1,9 @@
 #pragma once
-
 #include <vector>
 #include "geometry.h"
 #include <map>
+#include "stb_image.h"
+#include "tgaimage.h"
 
 struct Face {
 	std::vector<int> vertexIndex, textureCoordsIndex, vertexNormalsIndex;
@@ -17,15 +18,23 @@ struct Material {
 	Vec3f Ka;
 	Vec3f Kd;
 	Vec3f Ks;
+	Vec3f Tf;
 	float Ns;
 	float Ni;
 	float d;
 	int illum;
 	std::string map_Kd;
+	stbi_uc* image;	
+	int w, h, n;
 
 	friend std::ostream& operator<<(std::ostream& os, const Material& m);
 	Material() = default;
 	Material(std::string exc) : Kd(1.F, 1.F, 1.F) {};
+
+	TGAColor GetPixel(float x, float y) {
+		unsigned char* pixelOffset = image + ((int)(x * w) + (int)(y * h) * w) * n;
+		return { pixelOffset[0], pixelOffset[1], pixelOffset[2], 255 };
+	}
 };
 
 class Model {
