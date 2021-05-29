@@ -1,9 +1,15 @@
 #pragma once
-#include <vector>
 #include "geometry.h"
-#include <map>
-#include "stb_image.h"
 #include "tgaimage.h"
+#include "stb_image.h"
+#include <vector>
+#include <map>
+#include <unordered_map>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 struct Face {
 	std::vector<int> vertexIndex, textureCoordsIndex, vertexNormalsIndex;
@@ -44,13 +50,13 @@ private:
 	std::vector<Vec2f> texCoords_;
 	std::vector<Face> tris_;
 
-	std::map<std::string, Material> materials_;
+	std::unordered_map<std::string, Material> materials_;
 
-	void LoadModel(std::string filename);
-	void LoadMaterial(std::string filename);
+	void LoadModel(const std::string& filename);
+	void LoadMaterial(const std::string& filename);
 
 public:
-	Model(std::string filename);
+	Model(const std::string& filename);
 	~Model();
 
 	int nverts();
@@ -62,5 +68,5 @@ public:
 
 	Face& triangle(int idx);
 	std::vector<Face>& faces();
-	std::map<std::string, Material>& mats();
+	std::unordered_map<std::string, Material>& mats();
 };

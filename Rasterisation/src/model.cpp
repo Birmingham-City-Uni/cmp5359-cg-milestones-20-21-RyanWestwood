@@ -1,11 +1,6 @@
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
 #include "model.h"
 
-Model::Model(std::string filename) : verts_(), tris_() {
+Model::Model(const std::string& filename) {
 	LoadModel(filename + ".obj");
 	LoadMaterial(filename + ".mtl");
 }
@@ -14,11 +9,11 @@ Model::~Model() {
 }
 
 int Model::nverts() {
-	return (int)verts_.size();
+	return static_cast<int>(verts_.size());
 }
 
 int Model::nfaces() {
-	return (int)tris_.size();
+	return static_cast<int>(tris_.size());
 }
 
 Face& Model::triangle(int idx)
@@ -43,47 +38,55 @@ std::vector<Face>& Model::faces()
 	return tris_;
 }
 
-std::map<std::string, Material>& Model::mats()
+std::unordered_map<std::string, Material>& Model::mats()
 {
 	return materials_;
 }
 
-void Model::LoadModel(std::string filename) {
+void Model::LoadModel(const std::string& filename) {
 	std::ifstream in;
 	in.open(filename, std::ifstream::in);
-	if (in.fail()) return;
+	if (in.fail()){
+		return;
+	}
 	std::string line;
 	std::string mat;
 	while (!in.eof()) {
 		std::getline(in, line);
-		std::istringstream iss(line.c_str());
+		std::istringstream iss(line);
 		char trash;
-		if (!line.compare(0, 2, "v ")) { // Vertex
+		if (line.compare(0, 2, "v ") == 0) { // Vertex
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 			verts_.push_back(v);
 		}
-		if (!line.compare(0, 3, "vn ")) { // Vertex normals
+		if (line.compare(0, 3, "vn ") == 0) { // Vertex normals
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 			vertNorms_.push_back(v);
 		}
-		if (!line.compare(0, 3, "vt ")) { // Texture coordinates
+		if (line.compare(0, 3, "vt ") == 0) { // Texture coordinates
 			std::string str;
 			iss >> str;
 			Vec2f v;
-			for (int i = 0; i < 2; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 			texCoords_.push_back(v);
 		}
-		if (!line.compare(0, 7, "usemtl ")) {
+		if (line.compare(0, 7, "usemtl ") == 0) {
 			std::string str;
 			iss >> str;
 			iss >> str;
 			mat = str;
 		}
-		if (!line.compare(0, 2, "f ")) { // face polygons
+		if (line.compare(0, 2, "f ") == 0) { // face polygons
 			std::vector<int> v;
 			std::vector<int> t;
 			std::vector<int> n;
@@ -104,20 +107,24 @@ void Model::LoadModel(std::string filename) {
 	std::cerr << "# v# " << verts_.size() << " f# " << tris_.size() << std::endl;
 }
 
-void Model::LoadMaterial(std::string filename) {
+void Model::LoadMaterial(const std::string& filename) {
 	std::ifstream in;
 	in.open(filename, std::ifstream::in);
-	if (in.fail()) return;
+	if (in.fail()){
+		return;
+	} 
 	std::string line;
 
 	std::unique_ptr<Material> mat;
 
 	while (!in.eof()) {
 		std::getline(in, line);
-		std::istringstream iss(line.c_str());
+		std::istringstream iss(line);
 		std::string trash;
-		if (!line.compare(0, 7, "newmtl ")) { // Material name 
-			if (mat != nullptr)	materials_.insert(std::make_pair(std::string(mat->name), Material(*mat)));
+		if (line.compare(0, 7, "newmtl ") == 0) { // Material name 
+			if (mat != nullptr)	{
+				materials_.insert(std::make_pair(std::string(mat->name), Material(*mat)));
+			}
 			iss >> trash;
 			std::string str;
 			iss >> str;
@@ -125,63 +132,71 @@ void Model::LoadMaterial(std::string filename) {
 			mat = std::make_unique<Material>();
 			mat->name = str;
 		}
-		if (!line.compare(0, 3, "Ka ")) { // Ambient colour
+		if (line.compare(0, 3, "Ka ") == 0) { // Ambient colour
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 
 			mat->Ka = v;
 		}
-		if (!line.compare(0, 3, "Kd ")) { // Diffuse colour
+		if (line.compare(0, 3, "Kd ") == 0) { // Diffuse colour
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 
 			mat->Kd = v;
 		}
-		if (!line.compare(0, 3, "Ks ")) { // Specular colour
+		if (line.compare(0, 3, "Ks ") == 0) { // Specular colour
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 
 			mat->Ks = v;
 		}
-		if (!line.compare(0, 3, "Ns ")) { // Specular highlights 
+		if (line.compare(0, 3, "Ns ") == 0) { // Specular highlights 
 			iss >> trash;
 			float f;
 			iss >> f;
 
 			mat->Ns = f;
 		}
-		if (!line.compare(0, 3, "Ni ")) { // Optical density
+		if (line.compare(0, 3, "Ni ") == 0) { // Optical density
 			iss >> trash;
 			float f;
 			iss >> f;
 
 			mat->Ni = f;
 		}
-		if (!line.compare(0, 3, "Tf ")) { // Transmission filter
+		if (line.compare(0, 3, "Tf ") == 0) { // Transmission filter
 			iss >> trash;
 			Vec3f v;
-			for (int i = 0; i < 3; i++) iss >> v.raw[i];
+			for(float& i : v.raw){
+				iss>>i;
+			}
 
 			mat->Tf = v;
 		}
-		if (!line.compare(0, 2, "d ")) { // Dissolve
+		if (line.compare(0, 2, "d ") == 0) { // Dissolve
 			iss >> trash;
 			float f;
 			iss >> f;
 
 			mat->d = f;
 		}
-		if (!line.compare(0, 6, "illum ")) { // Illumination model
+		if (line.compare(0, 6, "illum ") == 0) { // Illumination model
 			iss >> trash;
 			int i;
 			iss >> i;
 
 			mat->illum = i;
 		}
-		if (!line.compare(0, 7, "map_Kd ")) { // Colour texture file
+		if (line.compare(0, 7, "map_Kd ") == 0) { // Colour texture file
 			iss >> trash;
 			std::string str;
 			iss >> str;

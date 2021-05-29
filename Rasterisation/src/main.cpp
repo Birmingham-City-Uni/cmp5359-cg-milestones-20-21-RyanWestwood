@@ -1,3 +1,8 @@
+#include "tgaimage.h"
+#include "model.h"
+#include "geometry.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -7,13 +12,15 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
-#include "tgaimage.h"
-#include "model.h"
-#include "geometry.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
+#if defined(_WIN32) || defined(_WIN64)
 #define M_PI 3.14159265359
+std::string file = "win-scene";
+#endif
+#if defined(__unix__) || defined(__linux__)
+std::string file = "linux-scene";
+#endif
+
 static const float inchToMm = 25.4;
 enum FitResolutionGate { kFill = 0, kOverscan };
 
@@ -33,7 +40,7 @@ float filmApertureWidth = 0.980;
 float filmApertureHeight = 0.735;
 
 
-void Line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color) {
+void Line(int x0, int y0, int x1, int y1, TGAImage& image, const TGAColor& color) {
 	double dx = abs(x1 - x0);
 	double sx = x0 < x1 ? 1 : -1;
 	double dy = -abs(y1 - y0);
@@ -42,7 +49,9 @@ void Line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color) {
 
 	while (true) {
 		image.set(x0, y0, color);
-		if (x0 == x1 && y0 == y1) break;
+		if (x0 == x1 && y0 == y1) {
+			break;
+		}
 		double e2 = 2 * err;
 		if (e2 >= dy) {
 			err += dy;
@@ -83,14 +92,17 @@ inline bool InTriangle(Vec2i a, Vec2i b, Vec2i c, Vec2i p) {
 	return 0 <= aa && aa <= 1 && 0 <= bb && bb <= 1 && 0 <= cc && cc <= 1;
 }
 
-void Triangle(std::vector<Vec2i> p, TGAImage& image, TGAColor color) {
+void Triangle(std::vector<Vec2i> p, TGAImage& image, const TGAColor& color) {
 
 	std::pair<Vec2i, Vec2i> bbox = TriangleBoundingBox(p, image);
 
-	for (int x = bbox.first.x; x < bbox.second.x; x++)
-		for (int y = bbox.first.y; y < bbox.second.y; y++)
-			if (InTriangle(p[0], p[1], p[2], { x,y }))
+	for (int x = bbox.first.x; x < bbox.second.x; x++){
+		for (int y = bbox.first.y; y < bbox.second.y; y++){
+			if (InTriangle(p[0], p[1], p[2], { x,y })){
 				image.set(x, y, color);
+			}
+		}
+	}
 }
 
 // Compute screen coordinates based on a physically-based camera model
@@ -107,7 +119,7 @@ void computeScreenCoordinates(
 )
 {
 	float filmAspectRatio = filmApertureWidth / filmApertureHeight;
-	float deviceAspectRatio = imageWidth / (float)imageHeight;
+	float deviceAspectRatio = imageWidth / static_cast<float>(imageHeight);
 
 	top = ((filmApertureHeight * inchToMm / 2) / focalLength) * nearClippingPlane;
 	right = ((filmApertureWidth * inchToMm / 2) / focalLength) * nearClippingPlane;
@@ -292,10 +304,10 @@ int main(int argc, char** argv) {
 
 		// sets the bounds of the rectangle for the raster triangle
 		// be careful xmin/xmax/ymin/ymax can be negative. Don't cast to uint32_t
-		uint32_t x0 = std::max(int32_t(0), (int32_t)(std::floor(xmin)));
-		uint32_t x1 = std::min(int32_t(width) - 1, (int32_t)(std::floor(xmax)));
-		uint32_t y0 = std::max(int32_t(0), (int32_t)(std::floor(ymin)));
-		uint32_t y1 = std::min(int32_t(height) - 1, (int32_t)(std::floor(ymax)));
+		uint32_t x0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(xmin)));
+		uint32_t x1 = std::min(static_cast<int32_t>(width) - 1, static_cast<int32_t>(std::floor(xmax)));
+		uint32_t y0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(ymin)));
+		uint32_t y1 = std::min(static_cast<int32_t>(height) - 1, static_cast<int32_t>(std::floor(ymax)));
 
 		// calculates the area of the triangle, used in determining barycentric coordinates
 		float area = edgeFunction(v0Raster, v1Raster, v2Raster);
@@ -353,7 +365,7 @@ int main(int argc, char** argv) {
 						float nDotView = std::max(0.f, n.dotProduct(viewDirection));
 
 						//// Set the pixel value
-						auto colour = mats.size() != 0 ? mats[face.mat] : Material("Default");
+						auto colour = !mats.empty() ? mats[face.mat] : Material("Default");
 						if (st.y < 0) st.y *= -1;
 						auto aaa = mats[face.mat].GetPixel(1 - st.x, 1- st.y);
 
@@ -365,7 +377,7 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-	image.write_tga_file(filename + "-render.tga");
+	image.write_tga_file(dir + "/render/" + file);
 
 	return 0;
 }
