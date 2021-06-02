@@ -56,7 +56,8 @@ void ResetColours(ColourArr& arr) {
 void Movement(ColourArr& tc, int& spp, Point3f& lf, Camera& cam, Vec3f dir) {
 	ResetColours(tc);
 	spp = 1;
-	lf += dir;
+	lf += dir * 2;
+	std::cout << lf << "\n";
 	cam.LookFrom(lf);
 }
 
@@ -70,8 +71,8 @@ int main(int argc, char** argv)
 	int spp = 1;
 	const int max_depth = 10;
 
-	Point3f lookfrom(0, 4, 15);
-	Point3f lookat(0, 0, 0);
+	Point3f lookfrom(12, 7, -11);
+	Point3f lookat(-1, 2, 0);
 	Vec3f vup(0, 1, 0);
 	auto dist_to_focus = 15.0;
 	auto aperature = 0.15;
@@ -92,7 +93,7 @@ int main(int argc, char** argv)
 	if (!bvhfile || !matfile) {
 		std::vector<std::shared_ptr<Hittable>> nodes;
 		std::vector<std::shared_ptr<Material>> mats;
-		world = Test_Scene(mats);
+		world = My_Scene_Ind(mats);
 		Traverse_Tree(world.objects.front(), nodes);
 		WriteNode(nodes, file + ".bvh");
 		WriteMaterials(mats, file + ".mtls");
@@ -111,8 +112,8 @@ int main(int argc, char** argv)
 		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));
 		SDL_RenderClear(renderer);
 
-		InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
-		//StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 10);
+		//InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
+		StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 50);
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, screen);
 		if (texture == nullptr) {
@@ -152,6 +153,12 @@ int main(int argc, char** argv)
 				case SDLK_DOWN:
 				case SDLK_s:
 					Movement(totalColour, spp, lookfrom, cam, { 0,0,1 });
+					break;
+				case SDLK_SPACE:
+					Movement(totalColour, spp, lookfrom, cam, { 0,1,0 });
+					break;
+				case SDLK_z:
+					Movement(totalColour, spp, lookfrom, cam, { 0,-1,0 });
 					break;
 				}
 			}

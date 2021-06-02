@@ -7,3 +7,5 @@
 
 Hittable_List Small_Scene(std::vector<std::shared_ptr<Material>>& m);
 Hittable_List Test_Scene(std::vector<std::shared_ptr<Material>>& m);
+Hittable_List My_Scene(std::vector<std::shared_ptr<Material>>& m);
+Hittable_List My_Scene_Ind(std::vector<std::shared_ptr<Material>>& m);
