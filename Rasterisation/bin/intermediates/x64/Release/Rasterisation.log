@@ -10,22 +10,22 @@ C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.c
               T=int
           ]
 C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(128,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(320,35): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(319,35): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(320,26): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(319,26): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
+C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(375,26): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
 C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(376,26): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
 C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(377,26): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
-C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(378,26): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
+C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(382,46): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
 C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(383,46): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
 C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(384,46): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
-C:\Users\RyanW\cmp5359-cg-milestones-20-21-RyanWestwood\Rasterisation\src\main.cpp(385,46): warning C4244: '=': conversion from 'float' to 'unsigned char', possible loss of data
   Generating code
   1 of 947 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation

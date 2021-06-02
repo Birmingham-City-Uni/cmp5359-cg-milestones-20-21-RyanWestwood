@@ -240,7 +240,6 @@ int main(int argc, char** argv) {
 	std::string dir = "./res/";
 
 	models.emplace_back(std::make_unique<Model>(Model(dir + "raster-scene")));
-
 	TGAImage image(width, height, TGAImage::RGB);
 
 	Vec3f light_dir(0, 0, -1);
