@@ -203,8 +203,8 @@ void Model::LoadMaterial(const std::string& filename) {
 
 			mat->map_Kd = str;
 
-			unsigned bytePerPixel = 3;
-			mat->image = stbi_load("./res/cc_t.tga", &mat->w, &mat->h, &mat->n, bytePerPixel);
+			unsigned bytePerPixel = 4;
+			mat->image = stbi_load(("./res/" + str).c_str(), &mat->w, &mat->h, &mat->n, bytePerPixel);
 		}
 	}
 	materials_.insert(std::make_pair(std::string(mat->name), Material(*mat)));

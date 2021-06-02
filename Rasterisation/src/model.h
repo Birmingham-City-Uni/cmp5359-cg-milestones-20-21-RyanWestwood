@@ -38,6 +38,7 @@ struct Material {
 	Material(std::string exc) : Kd(1.F, 1.F, 1.F) {};
 
 	TGAColor GetPixel(float x, float y) {
+		if (x * w >= w || y * h >= h) return { 255,255,255,255 };
 		unsigned char* pixelOffset = image + ((int)(x * w) + (int)(y * h) * w) * n;
 		return { pixelOffset[0], pixelOffset[1], pixelOffset[2], 255 };
 	}

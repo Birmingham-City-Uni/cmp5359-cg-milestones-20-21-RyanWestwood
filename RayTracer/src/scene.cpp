@@ -68,3 +68,12 @@ Hittable_List Test_Scene(std::vector<std::shared_ptr<Material>>& m) {
 
 	return Hittable_List(std::make_shared<BVH_Node>(world));
 }
+
+Hittable_List My_Scene(std::vector<std::shared_ptr<Material>>& m) {
+	Hittable_List world;
+	int index = 1;
+
+	Model* model = new Model("./res/Scene");
+
+	return Hittable_List(std::make_shared<BVH_Node>(world));
+}

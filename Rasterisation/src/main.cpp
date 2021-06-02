@@ -29,7 +29,7 @@ const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
 const int width = 640;
 const int height = 480;
-std::unique_ptr<Model> model;
+std::vector<std::unique_ptr<Model>> models;
 Matrix44f worldToCamera;
 
 const float nearClippingPlane = 1;
@@ -96,9 +96,9 @@ void Triangle(std::vector<Vec2i> p, TGAImage& image, const TGAColor& color) {
 
 	std::pair<Vec2i, Vec2i> bbox = TriangleBoundingBox(p, image);
 
-	for (int x = bbox.first.x; x < bbox.second.x; x++){
-		for (int y = bbox.first.y; y < bbox.second.y; y++){
-			if (InTriangle(p[0], p[1], p[2], { x,y })){
+	for (int x = bbox.first.x; x < bbox.second.x; x++) {
+		for (int y = bbox.first.y; y < bbox.second.y; y++) {
+			if (InTriangle(p[0], p[1], p[2], { x,y })) {
 				image.set(x, y, color);
 			}
 		}
@@ -238,9 +238,8 @@ Matrix44f lookAt(const Vec3f from, const Vec3f to, const Vec3f _tmp = Vec3f(0, 1
 int main(int argc, char** argv) {
 
 	std::string dir = "./res/";
-	std::string filename = dir + "cc_t";
 
-	2 == argc ? model = std::make_unique<Model>(Model(argv[1])) : model = std::make_unique<Model>(Model(filename));
+	models.emplace_back(std::make_unique<Model>(Model(dir + "raster-scene")));
 
 	TGAImage image(width, height, TGAImage::RGB);
 
@@ -257,127 +256,143 @@ int main(int argc, char** argv) {
 		focalLength,
 		t, b, l, r);
 
-	Vec3f eye(0.F, 1.F, 3.F);
+	Vec3f eye(8.F, 6.F, -8.F);
 	Vec3f target(0.f, 0.5f, 0.f);
 	Vec3f up(0.f, 1.f, 0.f);
 	worldToCamera = lookAt(eye, target, up).inverse();
+
+	constexpr int ambient = 20;
 
 	// define the depth-buffer. Initialize depth buffer to far clipping plane.
 	float* depthBuffer = new float[width * height];
 	for (uint32_t i = 0; i < width * height; ++i) depthBuffer[i] = farClippingPlane;
 
-	auto mats = model->mats();
-	for (auto& face : model->faces()) {
-		//	Vertex indexes
-		const Vec3f& v0 = model->vert(face.vertexIndex[0]);
-		const Vec3f& v1 = model->vert(face.vertexIndex[1]);
-		const Vec3f& v2 = model->vert(face.vertexIndex[2]);
+	for (auto& model : models) {
+		auto mats = model->mats();
+		for (auto& face : model->faces()) {
+			//	Vertex indexes
+			const Vec3f& v0 = model->vert(face.vertexIndex[0]);
+			const Vec3f& v1 = model->vert(face.vertexIndex[1]);
+			const Vec3f& v2 = model->vert(face.vertexIndex[2]);
 
-		//	Convert vert to raster space
-		Vec3f v0Raster, v1Raster, v2Raster;
-		convertToRaster(v0, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v0Raster);
-		convertToRaster(v1, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v1Raster);
-		convertToRaster(v2, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v2Raster);
+			//	Convert vert to raster space
+			Vec3f v0Raster, v1Raster, v2Raster;
+			convertToRaster(v0, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v0Raster);
+			convertToRaster(v1, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v1Raster);
+			convertToRaster(v2, worldToCamera, l, r, t, b, nearClippingPlane, width, height, v2Raster);
 
-		// Precompute reciprocal of vertex z-coordinate
-		v0Raster.z = 1 / v0Raster.z;
-		v1Raster.z = 1 / v1Raster.z;
-		v2Raster.z = 1 / v2Raster.z;
+			// Precompute reciprocal of vertex z-coordinate
+			v0Raster.z = 1 / v0Raster.z;
+			v1Raster.z = 1 / v1Raster.z;
+			v2Raster.z = 1 / v2Raster.z;
 
-		//	Texture attributes
-		Vec2f st0 = model->textureCoord(face.textureCoordsIndex[0]);
-		Vec2f st1 = model->textureCoord(face.textureCoordsIndex[1]);
-		Vec2f st2 = model->textureCoord(face.textureCoordsIndex[2]);
+			//	Texture attributes
+			Vec2f st0 = model->textureCoord(face.textureCoordsIndex[0]);
+			Vec2f st1 = model->textureCoord(face.textureCoordsIndex[1]);
+			Vec2f st2 = model->textureCoord(face.textureCoordsIndex[2]);
 
-		st0 *= v0Raster.z;
-		st1 *= v1Raster.z;
-		st2 *= v2Raster.z;
+			st0 *= v0Raster.z;
+			st1 *= v1Raster.z;
+			st2 *= v2Raster.z;
 
-		// Calculate the bounding box of the triangle defined by the vertices
-		float xmin = min3(v0Raster.x, v1Raster.x, v2Raster.x);
-		float ymin = min3(v0Raster.y, v1Raster.y, v2Raster.y);
-		float xmax = max3(v0Raster.x, v1Raster.x, v2Raster.x);
-		float ymax = max3(v0Raster.y, v1Raster.y, v2Raster.y);
+			// Calculate the bounding box of the triangle defined by the vertices
+			float xmin = min3(v0Raster.x, v1Raster.x, v2Raster.x);
+			float ymin = min3(v0Raster.y, v1Raster.y, v2Raster.y);
+			float xmax = max3(v0Raster.x, v1Raster.x, v2Raster.x);
+			float ymax = max3(v0Raster.y, v1Raster.y, v2Raster.y);
 
-		// the triangle is out of screen
-		if (xmin > width - 1 || xmax < 0 || ymin > height - 1 || ymax < 0) continue;
+			// the triangle is out of screen
+			if (xmin > width - 1 || xmax < 0 || ymin > height - 1 || ymax < 0) continue;
 
-		// sets the bounds of the rectangle for the raster triangle
-		// be careful xmin/xmax/ymin/ymax can be negative. Don't cast to uint32_t
-		uint32_t x0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(xmin)));
-		uint32_t x1 = std::min(static_cast<int32_t>(width) - 1, static_cast<int32_t>(std::floor(xmax)));
-		uint32_t y0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(ymin)));
-		uint32_t y1 = std::min(static_cast<int32_t>(height) - 1, static_cast<int32_t>(std::floor(ymax)));
+			// sets the bounds of the rectangle for the raster triangle
+			// be careful xmin/xmax/ymin/ymax can be negative. Don't cast to uint32_t
+			uint32_t x0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(xmin)));
+			uint32_t x1 = std::min(static_cast<int32_t>(width) - 1, static_cast<int32_t>(std::floor(xmax)));
+			uint32_t y0 = std::max(static_cast<int32_t>(0), static_cast<int32_t>(std::floor(ymin)));
+			uint32_t y1 = std::min(static_cast<int32_t>(height) - 1, static_cast<int32_t>(std::floor(ymax)));
 
-		// calculates the area of the triangle, used in determining barycentric coordinates
-		float area = edgeFunction(v0Raster, v1Raster, v2Raster);
+			// calculates the area of the triangle, used in determining barycentric coordinates
+			float area = edgeFunction(v0Raster, v1Raster, v2Raster);
 
-		// Inner loop - for every pixel of the bounding box enclosing the triangle
-		for (uint32_t y = y0; y <= y1; ++y) {
-			for (uint32_t x = x0; x <= x1; ++x) {
-				Vec3f pixelSample(x + 0.5, y + 0.5, 0); // You could use multiple pixel samples for antialiasing!!
-				// Calculate the area of the subtriangles for barycentric coordinates
-				float w0 = edgeFunction(v1Raster, v2Raster, pixelSample);
-				float w1 = edgeFunction(v2Raster, v0Raster, pixelSample);
-				float w2 = edgeFunction(v0Raster, v1Raster, pixelSample);
-				if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-					// divide by the area to give us our coefficients
-					w0 /= area;
-					w1 /= area;
-					w2 /= area;
-					float oneOverZ = v0Raster.z * w0 + v1Raster.z * w1 + v2Raster.z * w2; // reciprocal for depth testing
-					float z = 1 / oneOverZ;
-					// Depth-buffer test
-					if (z < depthBuffer[y * width + x]) { // is this triangle closer than others previously?
-						depthBuffer[y * width + x] = z;
+			// Inner loop - for every pixel of the bounding box enclosing the triangle
+			for (uint32_t y = y0; y <= y1; ++y) {
+				for (uint32_t x = x0; x <= x1; ++x) {
+					Vec3f pixelSample(x + 0.5, y + 0.5, 0); // You could use multiple pixel samples for antialiasing!!
+					// Calculate the area of the subtriangles for barycentric coordinates
+					float w0 = edgeFunction(v1Raster, v2Raster, pixelSample);
+					float w1 = edgeFunction(v2Raster, v0Raster, pixelSample);
+					float w2 = edgeFunction(v0Raster, v1Raster, pixelSample);
+					if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+						// divide by the area to give us our coefficients
+						w0 /= area;
+						w1 /= area;
+						w2 /= area;
+						float oneOverZ = v0Raster.z * w0 + v1Raster.z * w1 + v2Raster.z * w2; // reciprocal for depth testing
+						float z = 1 / oneOverZ;
+						// Depth-buffer test
+						if (z < depthBuffer[y * width + x]) { // is this triangle closer than others previously?
+							depthBuffer[y * width + x] = z;
 
-						// Calculate the texture coordinate based on barycentric position of the pixel
-						Vec2f st = st0 * w0 + st1 * w1 + st2 * w2;
+							// Calculate the texture coordinate based on barycentric position of the pixel
+							Vec2f st = st0 * w0 + st1 * w1 + st2 * w2;
 
-						// correct for perspective distortion
-						st *= z;
-					
-						// If you need to compute the actual position of the shaded
-						// point in camera space. Proceed like with the other vertex attribute.
-						// Divide the point coordinates by the vertex z-coordinate then
-						// interpolate using barycentric coordinates and finally multiply
-						// by sample depth.
-						Vec3f v0Cam, v1Cam, v2Cam;
-						worldToCamera.multVecMatrix(v0, v0Cam);
-						worldToCamera.multVecMatrix(v1, v1Cam);
-						worldToCamera.multVecMatrix(v2, v2Cam);
+							// correct for perspective distortion
+							st *= z;
 
-						float px = (v0Cam.x / -v0Cam.z) * w0 + (v1Cam.x / -v1Cam.z) * w1 + (v2Cam.x / -v2Cam.z) * w2;
-						float py = (v0Cam.y / -v0Cam.z) * w0 + (v1Cam.y / -v1Cam.z) * w1 + (v2Cam.y / -v2Cam.z) * w2;
+							// If you need to compute the actual position of the shaded
+							// point in camera space. Proceed like with the other vertex attribute.
+							// Divide the point coordinates by the vertex z-coordinate then
+							// interpolate using barycentric coordinates and finally multiply
+							// by sample depth.
+							Vec3f v0Cam, v1Cam, v2Cam;
+							worldToCamera.multVecMatrix(v0, v0Cam);
+							worldToCamera.multVecMatrix(v1, v1Cam);
+							worldToCamera.multVecMatrix(v2, v2Cam);
 
-						Vec3f pt(px * z, py * z, -z); // pt is in camera space
+							float px = (v0Cam.x / -v0Cam.z) * w0 + (v1Cam.x / -v1Cam.z) * w1 + (v2Cam.x / -v2Cam.z) * w2;
+							float py = (v0Cam.y / -v0Cam.z) * w0 + (v1Cam.y / -v1Cam.z) * w1 + (v2Cam.y / -v2Cam.z) * w2;
 
-						// Compute the face normal which is used for a simple facing ratio.
-						// Keep in mind that we are doing all calculation in camera space.
-						// Thus the view direction can be computed as the point on the object
-						// in camera space minus Vec3f(0), the position of the camera in camera space.
-						Vec3f n = (v1Cam - v0Cam).crossProduct(v2Cam - v0Cam);
-						n.normalize();
-						Vec3f viewDirection = -pt;
-						viewDirection.normalize();
+							Vec3f pt(px * z, py * z, -z); // pt is in camera space
 
-						// Calculate shading of the surface based on dot product of the normal and view direction
-						float nDotView = std::max(0.f, n.dotProduct(viewDirection));
+							// Compute the face normal which is used for a simple facing ratio.
+							// Keep in mind that we are doing all calculation in camera space.
+							// Thus the view direction can be computed as the point on the object
+							// in camera space minus Vec3f(0), the position of the camera in camera space.
+							Vec3f n = (v1Cam - v0Cam).crossProduct(v2Cam - v0Cam);
+							n.normalize();
+							Vec3f viewDirection = -pt;
+							viewDirection.normalize();
 
-						//// Set the pixel value
-						auto colour = !mats.empty() ? mats[face.mat] : Material("Default");
-						if (st.y < 0) st.y *= -1;
-						auto aaa = mats[face.mat].GetPixel(1 - st.x, 1- st.y);
+							// Calculate shading of the surface based on dot product of the normal and view direction
+							float nDotView = std::max(0.f, n.dotProduct(viewDirection));
 
-						//TGAColor col = TGAColor(nDotView * colour.Kd.x * 255, nDotView * colour.Kd.y * 255, nDotView * colour.Kd.z * 255, 255);
-						TGAColor col = TGAColor(nDotView * aaa.r, nDotView * aaa.g, nDotView * aaa.b, 255);
-						image.set(x, y, col);
+							//// Set the pixel value
+							auto colour = !mats.empty() ? mats[face.mat] : Material("Default");
+
+							TGAColor col;
+							if (mats[face.mat].image != nullptr) {
+								if (st.y < 0) st.y *= -1;
+								auto texture = mats[face.mat].GetPixel(1 - st.x, 1 - st.y);
+								col.r = nDotView * texture.r;
+								col.g = nDotView * texture.g;
+								col.b = nDotView * texture.b;
+								col.a = 255;
+							}
+							else {
+
+								col.r = nDotView * colour.Kd.x * 255 + ambient;
+								col.g = nDotView * colour.Kd.y * 255 + ambient;
+								col.b = nDotView * colour.Kd.z * 255 + ambient;
+								col.a = 255;
+							}
+							image.set(x, y, col);
+						}
 					}
 				}
 			}
 		}
 	}
-	image.write_tga_file(dir + "/render/" + file);
+	image.write_tga_file(dir + "/render/" + file + ".tga");
 
 	return 0;
 }
