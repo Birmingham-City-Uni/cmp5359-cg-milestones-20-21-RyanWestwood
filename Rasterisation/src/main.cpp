@@ -126,7 +126,6 @@ void computeScreenCoordinates(
 
 	// field of view (horizontal)
 	float fov = 2 * 180 / M_PI * atan((filmApertureWidth * inchToMm / 2) / focalLength);
-	std::cerr << "Field of view " << fov << std::endl;
 
 	float xscale = 1;
 	float yscale = 1;
@@ -392,6 +391,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	image.write_tga_file(dir + "/render/" + file + ".tga");
+	std::cout << "Image saved in Rasterisation/res/render/" << file << ".tga\n\n";
 
 	return 0;
 }

@@ -19,8 +19,8 @@
 
 typedef std::vector<std::vector<Colour>> ColourArr;
 
-constexpr int WIDTH = 1920;
-constexpr int HEIGHT = 1080;
+constexpr int WIDTH = 1280;
+constexpr int HEIGHT = 720;
 
 void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel);
 

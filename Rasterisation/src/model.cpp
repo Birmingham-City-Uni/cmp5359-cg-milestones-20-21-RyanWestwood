@@ -104,7 +104,7 @@ void Model::LoadModel(const std::string& filename) {
 			tris_.emplace_back(Face{ v, t, n, mat });
 		}
 	}
-	std::cerr << "# v# " << verts_.size() << " f# " << tris_.size() << std::endl;
+	//std::cerr << "# v# " << verts_.size() << " f# " << tris_.size() << std::endl;
 }
 
 void Model::LoadMaterial(const std::string& filename) {
@@ -209,7 +209,7 @@ void Model::LoadMaterial(const std::string& filename) {
 	}
 	materials_.insert(std::make_pair(std::string(mat->name), Material(*mat)));
 
-	std::cerr << "## " << materials_.size() << "size of materials" << std::endl;
+	//std::cerr << "## " << materials_.size() << "size of materials" << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& os, const Face& f)

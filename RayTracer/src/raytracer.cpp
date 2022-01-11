@@ -21,6 +21,9 @@ const char* renderFile = "./res/output/render-linux.tga";
 #include <vector>
 #include <memory>
 
+//	Remove/Add this define for different scenes
+#define BALL
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Surface* screen;
@@ -71,8 +74,13 @@ int main(int argc, char** argv)
 	int spp = 1;
 	const int max_depth = 10;
 
+#ifdef BALL
+	Point3f lookfrom(0, 2, 17);
+	Point3f lookat(0, 0, 0);
+#else
 	Point3f lookfrom(12, 7, -11);
 	Point3f lookat(-1, 2, 0);
+#endif
 	Vec3f vup(0, 1, 0);
 	auto dist_to_focus = 15.0;
 	auto aperature = 0.15;
@@ -87,13 +95,18 @@ int main(int argc, char** argv)
 	}
 	ResetColours(totalColour);
 
+#ifdef BALL
+	std::vector<std::shared_ptr<Material>> mats;
+	Hittable_List world = Ball_Scene(mats);
+#else
+	std::vector<std::shared_ptr<Material>> mats;
 	Hittable_List world;
 	std::ifstream bvhfile("./res/binary/" + file + ".bvh", std::ifstream::binary);
 	std::ifstream matfile("./res/binary/" + file + ".mtls", std::ifstream::binary);
 	if (!bvhfile || !matfile) {
 		std::vector<std::shared_ptr<Hittable>> nodes;
 		std::vector<std::shared_ptr<Material>> mats;
-		world = My_Scene_Ind(mats);
+		world = My_Scene(mats);
 		Traverse_Tree(world.objects.front(), nodes);
 		WriteNode(nodes, file + ".bvh");
 		WriteMaterials(mats, file + ".mtls");
@@ -102,9 +115,12 @@ int main(int argc, char** argv)
 		std::vector<Material*> mtls = ReadMaterials(file + ".mtls");
 		std::vector<Hittable*> nodes = ReadNode(file + ".bvh");
 		auto materials = Create_Materials(mtls);
+		std::cout << "Creating Tree...\n";
 		auto root = Create_Tree(nodes, materials);
+		std::cout << "Tree Created...\n";
 		world.Add(root);
 	}
+#endif
 
 	SDL_Event e;
 	bool running = true;
@@ -112,8 +128,11 @@ int main(int argc, char** argv)
 		SDL_FillRect(screen, nullptr, SDL_MapRGB(screen->format, 0, 0, 0));
 		SDL_RenderClear(renderer);
 
-		//InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
-		StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 50);
+		InteractiveRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth);
+
+		// Use this to render higher quality images a little faster. 
+		// NOTE: This method does not update the current progress to screen unlike interactive. 
+		//StaticRender(screen, image_width, image_height, std::ref(cam), std::ref(world), std::ref(totalColour), spp, max_depth, 50);
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, screen);
 		if (texture == nullptr) {
