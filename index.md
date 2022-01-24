@@ -1,37 +1,20 @@
-## Welcome to GitHub Pages
+# Software Renderer
+## Project Overview
+This project's goal was to directly compare rendering techiniques used on the same scene. This allowed us to see the different pros and cons of each approach.
 
-You can use the [editor on GitHub](https://github.com/Year-2/Software-Renderer/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+## Main features:
+* Raytracing
+* Rasterization
+* Multi-threading
+* Spatial Data Structures
+* Binary Tree Serialization 
+* .OBJ, .MTL File Parsing
+* Interative Renders
+* Scene
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Achievements
+The goal of this project was to continue learning C++ while also creating a renderer. All the main features required for a First grade were hit although I took a detour from the assessment brief to pursue my interests in making the program more efficient.
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Year-2/Software-Renderer/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+Multi-threading was interesting to me as I could brute force speed up the raytracing rendering times. 
+Bounding volume hierarchy increased the render times significantly but it took upto an hour to create the binary tree. 
+Binary tree serialization was used to offset the initial cost of the BVH. Storing the binary trees in binary files meant that the computer no longer had to compute the BVH on each subsequent run. After the initial tree creation the BVH could be read in from a binary file in 1~2 minutes. 
