@@ -2,6 +2,10 @@
 ## Project Overview
 This project's goal was to directly compare rendering techiniques used on the same scene. This allowed us to see the different pros and cons of each approach.
 
+<p align="center">
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/6hbE6WlHI0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
+
 ## Main features:
 * Raytracing
 * Rasterization
